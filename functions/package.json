@@ -1,0 +1,20 @@
+{
+  "name": "daiku-functions",
+  "description": "大工寸法計算アプリ v6 - Firebase Functions",
+  "scripts": {
+    "serve": "firebase emulators:start --only functions",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "20"
+  },
+  "dependencies": {
+    "firebase-functions": "^6.0.0",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "firebase-admin": "^12.0.0"
+  },
+  "private": true
+}
