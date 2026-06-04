@@ -882,7 +882,7 @@ function getGeminiConfig(){
     // Firebase Functions 経由（APIキー不要）
     var base = isLocalhost
       ? 'http://localhost:5001/kensetsu-nippo/us-central1'
-      : 'https://us-central1-kensetsu-nippo.cloudfunctions.net';
+      : 'https://us-central1-kensetsu-nippo-842a2.cloudfunctions.net';
     return { type: 'firebase', url: base + '/analyzeBlueprint', model: model };
   }
   // GitHub Pages / Artifact → 直接Gemini API
