@@ -1,0 +1,2516 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>大工寸法計算 v6</title>
+<style>
+:root{
+  --bg:#f5f0e8;--bg2:#ede6d8;--bg3:#e0d8c8;--card:#fff;
+  --border:#c8bfaa;--text:#2a2018;--text2:#5a4a30;--text3:#8a7a60;
+  --accent:#c17f24;--accent2:#3a8040;--green:#2d7a52;--blue:#1e5a9a;--red:#c03020;
+  --shadow:0 2px 8px rgba(0,0,0,.12);--radius:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--text);font-family:'Hiragino Kaku Gothic ProN',Meiryo,sans-serif;font-size:14px;}
+.screen{display:none;min-height:100dvh;padding-bottom:20px;}
+.screen.active{display:block;}
+#screen-home{padding:0 0 20px;}
+.home-header{background:linear-gradient(135deg,#2a1a08,#5a3a10);color:#f5e8c8;padding:16px 14px 14px;text-align:center;}
+.home-header h1{font-size:20px;font-weight:700;letter-spacing:3px;}
+.home-header p{font-size:11px;color:#c8a870;margin-top:4px;}
+.home-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 12px;}
+.home-card{background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:18px 12px 16px;text-align:center;cursor:pointer;border:2px solid transparent;transition:all .2s;}
+.home-card:active{transform:scale(.97);border-color:var(--accent);}
+.home-card.pdf-card{grid-column:1/-1;background:linear-gradient(135deg,#1a3a60,#2a5a90);color:#e8f0ff;border:2px solid #4a7ab8;}
+.home-card.pdf-card .label{color:#e8f0ff;}
+.home-card.pdf-card .sub{color:#a8c8f0;}
+.home-card .icon{font-size:32px;margin-bottom:8px;display:block;}
+.home-card .label{font-size:13px;font-weight:700;}
+.home-card .sub{font-size:10px;color:var(--text3);margin-top:3px;}
+.calc-screen{background:var(--bg);}
+.screen-header{background:linear-gradient(135deg,#2a1a08,#5a3a10);color:#f5e8c8;padding:12px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.back-btn{background:rgba(255,255,255,.15);border:none;color:#f5e8c8;font-size:13px;padding:6px 12px;border-radius:20px;cursor:pointer;}
+.screen-header h2{font-size:16px;font-weight:700;flex:1;}
+.content-area{padding:12px;}
+details.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;border:1px solid var(--border);overflow:hidden;}
+summary.card-title{padding:13px 14px;font-weight:700;font-size:14px;cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;background:var(--bg2);user-select:none;}
+summary.card-title::-webkit-details-marker{display:none;}
+summary.card-title::after{content:'▶';margin-left:auto;font-size:10px;color:var(--text3);transition:transform .2s;}
+details[open]>summary.card-title::after{transform:rotate(90deg);}
+.card-body{padding:14px;}
+.row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:130px;}
+.field label{font-size:11px;color:var(--text3);font-weight:600;}
+input[type=number],input[type=text],select{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;color:var(--text);width:100%;-webkit-appearance:none;font-family:inherit;}
+input:focus,select:focus{outline:none;border-color:var(--accent);background:#fffdf5;}
+input[readonly]{color:var(--accent);font-weight:700;background:var(--bg3);}
+.calc-btn{background:linear-gradient(135deg,#c17f24,#9a5e10);color:#fff;border:none;border-radius:8px;padding:12px;font-size:15px;font-weight:700;width:100%;cursor:pointer;margin-top:6px;letter-spacing:1px;}
+.calc-btn:active{opacity:.85;}
+.result-box{background:#f0faf0;border:1px solid #8ac890;border-radius:var(--radius);padding:14px;margin-top:10px;}
+.result-title{font-weight:700;font-size:13px;color:var(--green);letter-spacing:1px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #c0e0c0;}
+.result-item{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px dashed #c0dcc0;gap:8px;}
+.result-item:last-child{border-bottom:none;}
+.result-label{font-size:12px;color:var(--text2);flex:1;}
+.result-value{font-size:20px;font-weight:700;color:var(--accent);}
+.result-unit{font-size:12px;color:var(--text3);}
+.result-note{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.8;padding-top:8px;border-top:1px dashed #c0dcc0;white-space:pre-line;}
+.error-box{background:#fff0f0;border:1px solid #f0a0a0;border-radius:var(--radius);padding:12px;color:var(--red);font-size:13px;}
+.calc-wrap{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;margin-top:10px;border:1px solid var(--border);}
+.calc-ttl{font-size:11px;font-weight:700;color:var(--text3);letter-spacing:2px;margin-bottom:8px;}
+.calc-disp-area{background:#1a2a1a;border-radius:6px;padding:8px 12px;margin-bottom:6px;}
+.calc-expr-line{font-size:11px;color:#80a080;height:14px;overflow:hidden;white-space:nowrap;}
+.calc-main-disp{font-size:32px;color:#f0e060;text-align:right;line-height:1;font-weight:700;}
+.calc-mem-disp{font-size:10px;color:#80e080;}
+.calc-hist{display:none;background:var(--bg2);border-radius:5px;padding:6px;margin-top:4px;max-height:160px;overflow-y:auto;font-size:12px;}
+.cg4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:4px;}
+.cg6{display:grid;grid-template-columns:repeat(6,1fr);gap:4px;margin-bottom:4px;}
+.cg3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-bottom:4px;}
+.cb{background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:10px 4px;font-size:14px;font-weight:700;color:var(--text);cursor:pointer;text-align:center;user-select:none;}
+.cb:active{background:var(--accent);color:#fff;}
+.cb-op{background:#e8e0d0;color:#8a4000;}
+.cb-eq{background:var(--accent);color:#fff;}
+.cb-ac{background:#c05030;color:#fff;}
+.cb-mem{background:#305870;color:#e0f0ff;font-size:11px;}
+.cb-fn{background:#304870;color:#d0e8ff;font-size:11px;}
+.btn-group{display:flex;gap:6px;margin-top:6px;}
+.btn-sub{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;flex:1;text-align:center;}
+.btn-sub:active{background:var(--accent);color:#fff;}
+/* PDF解析専用スタイル */
+.pdf-screen-header{background:linear-gradient(135deg,#1a3a60,#2a5a90);color:#e8f0ff;padding:12px 14px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.pdf-upload-zone{border:2px dashed #4a7ab8;border-radius:12px;padding:24px;text-align:center;background:rgba(74,122,184,0.05);cursor:pointer;transition:all .2s;margin-bottom:12px;}
+.pdf-upload-zone:hover{background:rgba(74,122,184,0.12);border-color:#2a5a90;}
+.pdf-upload-zone input[type=file]{display:none;}
+.pdf-upload-label{font-size:16px;font-weight:700;color:#2a5a90;margin-bottom:6px;}
+.pdf-upload-sub{font-size:11px;color:var(--text3);}
+.ai-analyzing{background:#f0f4ff;border:1px solid #9ab0d8;border-radius:8px;padding:14px;margin-top:10px;text-align:center;}
+.ai-spinner{display:inline-block;width:24px;height:24px;border:3px solid #c0d0f0;border-top-color:#2a5a90;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:8px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.ai-result-box{background:#e8f4ff;border:1px solid #7aabdb;border-radius:8px;padding:14px;margin-top:10px;}
+.ai-result-title{font-weight:700;font-size:13px;color:#1a4a80;margin-bottom:10px;}
+.shape-badge{display:inline-block;padding:4px 10px;border-radius:4px;font-size:13px;font-weight:700;margin:2px;}
+.shape-L{background:#e8f8e8;color:#2a6a30;border:1px solid #8ac890;}
+.shape-T{background:#fff4e0;color:#7a4a00;border:1px solid #c8a060;}
+.shape-X{background:#f0e8ff;color:#4a2a80;border:1px solid #b090d0;}
+/* 入り隅専用 - カットリスト */
+.irisumi-cut-list{margin-top:14px;}
+.cut-item{background:linear-gradient(135deg,#2a5a30,#3a7a40);color:#fff;border-radius:10px;padding:16px 20px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;}
+.cut-len{font-size:28px;font-weight:700;letter-spacing:1px;}
+.cut-len-unit{font-size:14px;opacity:.8;}
+.cut-count{font-size:22px;font-weight:700;color:#a0f0a0;}
+.cut-count-label{font-size:11px;opacity:.8;text-align:right;}
+.shape-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.shape-btn{flex:1;min-width:70px;padding:10px 6px;border:2px solid var(--border);border-radius:8px;background:var(--bg2);font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all .2s;}
+.shape-btn.active-L{background:#e8f8e8;border-color:#3a8a40;color:#1a5a20;}
+.shape-btn.active-T{background:#fff4e0;border-color:#c8a060;color:#7a4a00;}
+.shape-btn.active-X{background:#f0e8ff;border-color:#b090d0;color:#4a2a80;}
+/* ファイルスロット */
+.file-slot { display:flex; flex-direction:column; gap:4px; }
+.file-slot-label { font-size:11px; font-weight:700; color:var(--text2); padding:0 2px; }
+.file-slot-zone { border:2px dashed #4a7ab8; border-radius:10px; padding:14px 6px; text-align:center; background:rgba(74,122,184,0.05); cursor:pointer; transition:all .2s; position:relative; min-height:70px; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.file-slot-zone.has-file { border-color:#2a8a30; background:rgba(42,138,48,0.07); }
+.file-slot-zone input[type=file] { display:none; }
+.slot-icon { font-size:22px; color:#4a7ab8; font-weight:700; line-height:1; }
+.slot-sub { font-size:10px; color:var(--text3); margin-top:3px; }
+.slot-info { font-size:10px; color:var(--green); min-height:14px; padding:0 2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* 防火ゾーンボタンアクティブ */
+.fz-btn.active { border-width:3px !important; opacity:1 !important; }
+.fz-btn:not(.active) { opacity:0.55; }
+/* toggle switch */
+.toggle-row{display:flex;align-items:center;gap:10px;padding:8px 0;}
+.toggle-label{font-size:13px;color:var(--text2);flex:1;}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:#ccc;border-radius:12px;cursor:pointer;transition:.2s;}
+.toggle-slider:before{position:absolute;content:'';height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle input:checked+.toggle-slider{background:var(--accent2);}
+.toggle input:checked+.toggle-slider:before{transform:translateX(20px);}
+/* 本数入力テーブル */
+.count-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.count-table th{background:var(--bg3);padding:7px 10px;font-size:12px;color:var(--accent);border:1px solid var(--border);}
+.count-table td{padding:6px 8px;border:1px solid var(--border);text-align:center;}
+.count-table input{padding:6px;font-size:15px;text-align:center;background:#fff;}
+.count-table select{padding:5px;font-size:13px;}
+.quick-table{width:100%;border-collapse:collapse;font-size:12px;}
+.quick-table th,.quick-table td{padding:6px 10px;border:1px solid var(--border);text-align:center;}
+.quick-table th{background:var(--bg3);color:var(--accent);font-size:13px;font-weight:700;}
+</style>
+</head>
+<body>
+
+<!-- ホーム -->
+<div id="screen-home" class="screen active">
+  <div class="home-header">
+    <h1>🏗️ 大工寸法計算 v6</h1>
+    <p>PDF解析対応 CARPENTER MEASUREMENT CALCULATOR</p>
+  </div>
+  <div class="home-grid">
+    <div class="home-card pdf-card" onclick="goTo('pdf')">
+      <span class="icon">📄</span>
+      <div class="label">PDF図面解析</div>
+      <div class="sub">図面から梁成・入り隅形状を自動検知</div>
+    </div>
+    <div class="home-card" onclick="goTo('kobai')"><span class="icon">🏠</span><div class="label">屋根</div><div class="sub">破風・鼻隠し / 垂木・隅木</div></div>
+    <div class="home-card" onclick="goTo('kaidan')"><span class="icon">🪜</span><div class="label">階段</div><div class="sub">蹴上げ / 廻り階段</div></div>
+    <div class="home-card" onclick="goTo('kaiko')"><span class="icon">🚪</span><div class="label">開口</div><div class="sub">ドア / サッシ開口</div></div>
+    <div class="home-card" onclick="goTo('tenjo')"><span class="icon">🏠</span><div class="label">天井</div><div class="sub">天井下地 / 勾配天井</div></div>
+    <div class="home-card" onclick="goTo('fstop')"><span class="icon">🔥</span><div class="label">FS</div><div class="sub">ファイヤーストップ</div></div>
+    <div class="home-card" onclick="goTo('irisumi')"><span class="icon">📐</span><div class="label">入り隅</div><div class="sub">カット寸法・本数リスト</div></div>
+    <div class="home-card" onclick="goTo('bousui')"><span class="icon">💧</span><div class="label">防水</div><div class="sub">防水下地寸法計算</div></div>
+  </div>
+</div>
+
+<!-- PDF解析 -->
+<div id="screen-pdf" class="screen calc-screen">
+  <div class="pdf-screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>📄 図面解析</h2></div>
+  <div class="content-area">
+
+    <!-- ★ 防火地域設定ボード（常時表示・全計算に連動） -->
+    <div id="fire-zone-board" style="background:linear-gradient(135deg,#3a1a08,#6a2a10);border-radius:12px;padding:14px 16px;margin-bottom:12px;border:2px solid #c04020;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:22px">🔥</span>
+        <div style="font-size:15px;font-weight:700;color:#f5d0b0;letter-spacing:1px">防火地域設定</div>
+        <div style="margin-left:auto">
+          <span id="fire-zone-badge" style="background:#c04020;color:#fff;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:1px">準防火地域</span>
+        </div>
+      </div>
+
+      <!-- 5択セレクター -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-bottom:12px" id="fire-zone-btns">
+        <button onclick="setFireZone('非防火')"   class="fz-btn" data-zone="非防火"   style="background:#4a5a3a;border:2px solid #6a7a4a;color:#d0e8b0;border-radius:8px;padding:8px 2px;font-size:11px;font-weight:700;cursor:pointer">非防火</button>
+        <button onclick="setFireZone('準防火')"   class="fz-btn" data-zone="準防火"   style="background:#c04020;border:2px solid #ff6040;color:#fff;border-radius:8px;padding:8px 2px;font-size:11px;font-weight:700;cursor:pointer">準防火</button>
+        <button onclick="setFireZone('準耐火')"   class="fz-btn" data-zone="準耐火"   style="background:#3a2a1a;border:2px solid #8a5a30;color:#d0b090;border-radius:8px;padding:8px 2px;font-size:11px;font-weight:700;cursor:pointer">準耐火</button>
+        <button onclick="setFireZone('防火')"     class="fz-btn" data-zone="防火"     style="background:#3a2a1a;border:2px solid #8a5a30;color:#d0b090;border-radius:8px;padding:8px 2px;font-size:11px;font-weight:700;cursor:pointer">防火</button>
+        <button onclick="setFireZone('耐火')"     class="fz-btn" data-zone="耐火"     style="background:#3a2a1a;border:2px solid #8a5a30;color:#d0b090;border-radius:8px;padding:8px 2px;font-size:11px;font-weight:700;cursor:pointer">耐火</button>
+      </div>
+
+      <!-- 自動・手動切替 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <div style="font-size:12px;color:#d0a080;flex:1">AI解析で自動判定</div>
+        <label class="toggle"><input type="checkbox" id="fire-zone-auto" onchange="onFireZoneAutoChange()"><span class="toggle-slider"></span></label>
+        <div style="font-size:12px;color:#d0a080">AUTO</div>
+      </div>
+
+      <!-- 仕様サマリー -->
+      <div id="fire-zone-spec" style="background:rgba(0,0,0,0.3);border-radius:8px;padding:10px;font-size:11px;color:#e0c0a0;line-height:1.8"></div>
+    </div>
+
+    <!-- STEP2: テキスト貼り付け解析 -->
+    <details class="card">
+      <summary class="card-title">📝 STEP 2｜テキスト貼り付けで解析</summary>
+      <div class="card-body">
+        <div style="background:#f0f4ff;border:1px solid #b0c8e8;border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:11px;color:#1a3a60;display:flex;align-items:center;gap:8px">
+          <label style="font-size:11px;color:#1a3a60;white-space:nowrap">使用モデル：</label>
+          <select id="model-selector" style="font-size:12px;padding:4px 6px;border:1px solid var(--border);border-radius:4px;background:var(--bg2);flex:1">
+            <option value="gemini-2.0-flash" selected>💰 Gemini 2.0 Flash（高速）</option>
+            <option value="gemini-2.0-flash-thinking-exp">🧠 Gemini 2.0 Flash Thinking（高精度）</option>
+            <option value="gemini-1.5-pro">🎯 Gemini 1.5 Pro（図面読み取り最強）</option>
+          </select>
+        </div>
+        <div class="field" style="margin-bottom:8px">
+          <label>図面テキスト・メモを貼り付け（PDFのテキスト・手書きメモどちらでも可）</label>
+          <textarea id="pdf-text-input" rows="5"
+            placeholder="例）階高2765mm&#10;梁成300mm：L字3箇所、T字2箇所&#10;梁成450mm：十字1箇所&#10;モジュール910、柱105mm&#10;屋根勾配4寸、軒450mm"
+            style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:10px;font-size:13px;color:var(--text);width:100%;font-family:inherit;resize:vertical;line-height:1.7"></textarea>
+        </div>
+        <button class="calc-btn" onclick="analyzeText()" style="background:linear-gradient(135deg,#1a5a90,#2a7ab0);">
+          🤖 AIで解析して全タブ計算
+        </button>
+        <div id="text-analyzing" style="display:none;" class="ai-analyzing">
+          <div class="ai-spinner"></div>
+          <div style="font-size:14px;font-weight:700;color:#2a5a90">AIが解析中...</div>
+        </div>
+        <div id="text-result"></div>
+      </div>
+    </details>
+
+    <!-- STEP3: PDF/画像アップロード（最大4枚対応） -->
+    <details class="card">
+      <summary class="card-title">📄 STEP 3｜図面アップロード（最大4枚・複数図面対応）</summary>
+      <div class="card-body">
+        <div style="background:#fff0f0;border:1px solid #e0a0a0;border-radius:6px;padding:8px 10px;margin-bottom:10px;font-size:12px;color:#7a2020">
+          ⚠️ Artifact内ではCORSにより直接API接続不可。GitHubにホスティング後に使用してください。
+        </div>
+
+        <!-- 図面種別ラベル付き4スロット -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px" id="file-slots">
+          <div class="file-slot" data-slot="0">
+            <div class="file-slot-label">📐 平面図</div>
+            <div class="file-slot-zone" onclick="triggerFileSlot(0)">
+              <input type="file" class="slot-file-input" accept=".pdf,image/*" onchange="onSlotFileSelect(event,0)">
+              <div class="slot-icon">＋</div>
+              <div class="slot-sub">タップして選択</div>
+            </div>
+            <div class="slot-info" id="slot-info-0"></div>
+          </div>
+          <div class="file-slot" data-slot="1">
+            <div class="file-slot-label">🏗️ 構造図・梁伏図</div>
+            <div class="file-slot-zone" onclick="triggerFileSlot(1)">
+              <input type="file" class="slot-file-input" accept=".pdf,image/*" onchange="onSlotFileSelect(event,1)">
+              <div class="slot-icon">＋</div>
+              <div class="slot-sub">タップして選択</div>
+            </div>
+            <div class="slot-info" id="slot-info-1"></div>
+          </div>
+          <div class="file-slot" data-slot="2">
+            <div class="file-slot-label">📏 立面図・矩計図</div>
+            <div class="file-slot-zone" onclick="triggerFileSlot(2)">
+              <input type="file" class="slot-file-input" accept=".pdf,image/*" onchange="onSlotFileSelect(event,2)">
+              <div class="slot-icon">＋</div>
+              <div class="slot-sub">タップして選択</div>
+            </div>
+            <div class="slot-info" id="slot-info-2"></div>
+          </div>
+          <div class="file-slot" data-slot="3">
+            <div class="file-slot-label">🪵 プレカット図</div>
+            <div class="file-slot-zone" onclick="triggerFileSlot(3)">
+              <input type="file" class="slot-file-input" accept=".pdf,image/*" onchange="onSlotFileSelect(event,3)">
+              <div class="slot-icon">＋</div>
+              <div class="slot-sub">タップして選択</div>
+            </div>
+            <div class="slot-info" id="slot-info-3"></div>
+          </div>
+        </div>
+
+        <div id="slot-count-label" style="font-size:12px;color:var(--text3);text-align:center;margin-bottom:8px">0枚選択中</div>
+
+        <button class="calc-btn" id="pdf-analyze-btn" onclick="analyzeMultiFiles()" style="background:linear-gradient(135deg,#1a5a90,#2a7ab0);" disabled>
+          🤖 AIで図面を解析する（複数枚まとめて解析）
+        </button>
+        <div id="pdf-analyzing" style="display:none;" class="ai-analyzing">
+          <div class="ai-spinner"></div>
+          <div style="font-size:14px;font-weight:700;color:#2a5a90">AIが図面を解析中...</div>
+          <div id="pdf-analyzing-sub" style="font-size:12px;color:#5a8ab0;margin-top:4px"></div>
+        </div>
+        <div id="pdf-result"></div>
+      </div>
+    </details>
+
+    <details class="card" id="pdf-apply-card" style="display:none;">
+      <summary class="card-title">✅ 解析結果・適用状況</summary>
+      <div class="card-body">
+        <div id="pdf-parsed-summary"></div>
+      </div>
+    </details>
+
+  </div>
+</div>
+
+<!-- 屋根 -->
+<div id="screen-kobai" class="screen calc-screen">
+  <div class="screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>🏠 屋根計算</h2></div>
+  <div class="content-area">
+    <details class="card">
+      <summary class="card-title">🪵 破風・鼻隠し計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label>
+            <select id="hafu-module" onchange="updateHafuSpans()">
+              <option value="910" selected>910モジュール</option>
+              <option value="900">900モジュール</option>
+              <option value="custom">カスタム</option>
+            </select>
+          </div>
+          <div class="field"><label>勾配 (寸)</label>
+            <input type="number" id="hafu-kobai" placeholder="例: 4" inputmode="decimal" step="0.5" oninput="autoCalcHafu()">
+          </div>
+        </div>
+        <div class="field"><label>地の間・破風方向（桁行き）</label>
+          <select id="hafu-jima-sel" onchange="updateHafuJima();autoCalcHafu()">
+            <option value="910">910mm（1sp）</option><option value="1820">1820mm（2sp）</option><option value="2730">2730mm（3sp）</option><option value="3640">3640mm（4sp）</option><option value="4550">4550mm（5sp）</option><option value="5460">5460mm（6sp）</option><option value="6370">6370mm（7sp）</option><option value="7280">7280mm（8sp）</option><option value="8190">8190mm（9sp）</option><option value="9100">9100mm（10sp）</option><option value="custom">カスタム入力</option>
+          </select>
+        </div>
+        <div class="row" id="hafu-jima-custom-wrap" style="display:none">
+          <div class="field"><label>破風方向 カスタム (mm)</label><input type="number" id="hafu-jima-custom" inputmode="decimal" oninput="autoCalcHafu()"></div>
+        </div>
+        <div class="field"><label>鼻隠し方向（梁間）</label>
+          <select id="hafu-hana-sel" onchange="updateHafuHana();autoCalcHafu()">
+            <option value="910">910mm（1sp）</option><option value="1820">1820mm（2sp）</option><option value="2730">2730mm（3sp）</option><option value="3640">3640mm（4sp）</option><option value="4550">4550mm（5sp）</option><option value="custom">カスタム入力</option>
+          </select>
+        </div>
+        <div class="row" id="hafu-hana-custom-wrap" style="display:none">
+          <div class="field"><label>鼻隠し方向 カスタム (mm)</label><input type="number" id="hafu-hana-custom" inputmode="decimal" oninput="autoCalcHafu()"></div>
+        </div>
+        <div class="field"><label>軒の出 水平長さ (mm)</label>
+          <input type="number" id="hafu-suihei" placeholder="例: 450" inputmode="decimal" oninput="autoCalcHafu()">
+        </div>
+        <div style="background:#f8f4ec;border:1px solid #c8b880;border-radius:6px;padding:12px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px">🪵 荒破風（斜辺）</div>
+          <div class="row">
+            <div class="field"><label>幅(mm)</label><input type="number" id="arahafu-w" value="105" inputmode="decimal" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>厚み(mm)</label><input type="number" id="arahafu-t" value="27" inputmode="decimal" oninput="autoCalcHafu()"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>加算(mm)</label><input type="number" id="arahafu-add-plus" value="0" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>減算(mm)</label><input type="number" id="arahafu-add-minus" value="0" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+          </div>
+          <div style="background:#e8f5e8;border:1px solid #90c090;border-radius:4px;padding:10px;margin-top:8px">
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px">📐 荒破風 割付（3600mm）</div>
+            <div class="field"><label>全長(mm)</label><input type="number" id="arahafu-waritsuke-len" placeholder="例: 8200" inputmode="decimal" oninput="calcArahafuWaritsuke()"></div>
+            <div id="arahafu-waritsuke-result"></div>
+          </div>
+        </div>
+        <div style="background:#f0f4f8;border:1px solid #b8c8d8;border-radius:6px;padding:12px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--blue);margin-bottom:8px">✨ 化粧破風（斜辺）</div>
+          <div class="row">
+            <div class="field"><label>幅(mm)</label><input type="number" id="kehafu-w" value="150" inputmode="decimal" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>厚み(mm)</label><input type="number" id="kehafu-t" value="14" inputmode="decimal" oninput="autoCalcHafu()"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>加算(mm) ※デフォルト82mm</label><input type="number" id="kehafu-add-plus" value="82" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>減算(mm)</label><input type="number" id="kehafu-add-minus" value="0" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+          </div>
+          <div style="background:#e8f0f8;border:1px solid #9ab0cc;border-radius:4px;padding:10px;margin-top:8px">
+            <div style="font-size:12px;font-weight:700;color:#3a6090;margin-bottom:6px">📐 化粧破風 割付（3030mm）</div>
+            <div class="field"><label>全長(mm)</label><input type="number" id="kehafu-waritsuke-len" placeholder="自動入力" inputmode="decimal" oninput="calcKehafuWaritsuke()"></div>
+            <div id="kehafu-waritsuke-result"></div>
+          </div>
+        </div>
+        <div style="background:#f8f4ec;border:1px solid #c8b880;border-radius:6px;padding:12px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:8px">🪵 荒鼻隠し（水平）</div>
+          <div class="row">
+            <div class="field"><label>幅(mm)</label><input type="number" id="arahana-w" value="105" inputmode="decimal" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>厚み(mm)</label><input type="number" id="arahana-t" value="27" inputmode="decimal" oninput="autoCalcHafu()"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>加算(mm) ※デフォルト54mm</label><input type="number" id="arahana-add-plus" value="54" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>減算(mm)</label><input type="number" id="arahana-add-minus" value="0" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+          </div>
+          <div style="background:#e8f5e8;border:1px solid #90c090;border-radius:4px;padding:10px;margin-top:8px">
+            <div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px">📐 荒鼻隠し 割付（3600mm）</div>
+            <div class="field"><label>全長(mm)</label><input type="number" id="arahana-waritsuke-len" placeholder="例: 8200" inputmode="decimal" oninput="calcArahanaWaritsuke()"></div>
+            <div id="arahana-waritsuke-result"></div>
+          </div>
+        </div>
+        <div style="background:#f0f4f8;border:1px solid #b8c8d8;border-radius:6px;padding:12px;margin-bottom:8px">
+          <div style="font-size:13px;font-weight:700;letter-spacing:2px;color:var(--blue);margin-bottom:8px">✨ 化粧鼻隠し（水平）</div>
+          <div class="row">
+            <div class="field"><label>幅(mm)</label><input type="number" id="kehana-w" value="150" inputmode="decimal" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>厚み(mm)</label><input type="number" id="kehana-t" value="14" inputmode="decimal" oninput="autoCalcHafu()"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>加算(mm)</label><input type="number" id="kehana-add-plus" value="0" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+            <div class="field"><label>減算(mm)</label><input type="number" id="kehana-add-minus" value="0" inputmode="decimal" min="0" oninput="autoCalcHafu()"></div>
+          </div>
+          <div style="background:#e8f0f8;border:1px solid #9ab0cc;border-radius:4px;padding:10px;margin-top:8px">
+            <div style="font-size:12px;font-weight:700;color:#3a6090;margin-bottom:6px">📐 化粧鼻隠し 割付（3030mm）</div>
+            <div class="field"><label>荒鼻隠し全長(mm)</label><input type="number" id="kehana-waritsuke-len" placeholder="自動入力" inputmode="decimal" oninput="calcKehanaWaritsuke()"></div>
+            <div id="kehana-waritsuke-result"></div>
+          </div>
+        </div>
+        <button class="calc-btn" onclick="calcHafu()">全部まとめて計算</button>
+        <div id="hafu-result"></div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">📐 隅木・垂木計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>勾配 (寸)</label><input type="number" id="sum-kobai" placeholder="例: 4" inputmode="decimal" step="0.5"></div>
+          <div class="field"><label>水平長さ (mm)</label><input type="number" id="sum-suihei" placeholder="例: 3640" inputmode="decimal"></div>
+        </div>
+        <button class="calc-btn" onclick="calcSumigi()">計算する</button>
+        <div id="sumigi-result"></div>
+        <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px">垂木 実長計算</div>
+          <div class="row">
+            <div class="field"><label>勾配 (寸)</label><input type="number" id="tk-kobai" placeholder="例: 4" inputmode="decimal" step="0.5" oninput="calcTaruki()"></div>
+            <div class="field"><label>軒の出</label>
+              <select id="tk-noki-sel" onchange="calcTaruki()">
+                <option value="450" selected>450mm</option><option value="600">600mm</option><option value="750">750mm</option><option value="900">900mm</option><option value="custom">カスタム</option>
+              </select>
+            </div>
+          </div>
+          <div class="row" id="tk-noki-custom-row" style="display:none">
+            <div class="field"><label>軒の出 カスタム(mm)</label><input type="number" id="tk-noki-custom" inputmode="decimal" oninput="calcTaruki()"></div>
+          </div>
+          <div class="row">
+            <div class="field"><label>梁方向スパン</label>
+              <select id="tk-span-hari" onchange="calcTaruki()">
+                <option value="910">910mm</option><option value="1820">1820mm</option><option value="2730">2730mm</option><option value="3640" selected>3640mm</option><option value="4550">4550mm</option><option value="custom">カスタム</option>
+              </select>
+            </div>
+            <div class="field"><label>桁ピッチ</label>
+              <select id="tk-pitch-keta" onchange="calcTaruki()">
+                <option value="455" selected>455mm</option><option value="303">303mm</option><option value="custom">カスタム</option>
+              </select>
+            </div>
+          </div>
+          <div class="row" id="tk-keta-custom-wrap" style="display:none">
+            <div class="field"><label>桁ピッチ カスタム(mm)</label><input type="number" id="tk-pitch-keta-custom" inputmode="decimal" oninput="calcTaruki()"></div>
+          </div>
+          <div class="row" id="tk-hari-span-custom-wrap" style="display:none">
+            <div class="field"><label>梁方向スパン カスタム(mm)</label><input type="number" id="tk-span-hari-custom" inputmode="decimal" oninput="calcTaruki()"></div>
+          </div>
+          <div id="taruki-result"></div>
+        </div>
+      </div>
+    </details>
+    <div id="calc-kobai-wrap"></div>
+  </div>
+</div>
+
+<!-- 階段 -->
+<div id="screen-kaidan" class="screen calc-screen">
+  <div class="screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>🪜 階段計算</h2></div>
+  <div class="content-area">
+    <details class="card" open>
+      <summary class="card-title">🪜 蹴上げ・踏面計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="k-module"><option value="910" selected>910mod</option><option value="900">900mod</option></select></div>
+          <div class="field"><label>ボード厚</label><select id="k-board"><option value="12.5" selected>12.5mm</option><option value="15">15mm</option><option value="9.5">9.5mm</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>廻り側板</label><select id="k-sokupan"><option value="1" selected>あり</option><option value="0">なし</option></select></div>
+          <div class="field"><label>踏面(mm)（廻り基準も兼用）</label><input type="number" id="k-fummen" placeholder="例: 225" inputmode="decimal" oninput="updateKaidanLayout()"></div>
+        </div>
+        <div class="field"><label>階高(mm)</label><input type="number" id="k-floor" placeholder="例: 2800" inputmode="decimal"></div>
+        <div class="field"><label>段数指定（空欄で自動）</label><input type="number" id="k-steps-input" placeholder="空欄=自動" inputmode="decimal"></div>
+        <div id="kaidan-blocks">
+          <div class="kaidan-block" style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px">
+            <div class="row"><div class="field"><label>種別</label><select class="kb-type" onchange="kbTypeChange(this)"><option value="straight" selected>直段</option><option value="mawari3">三段廻り</option><option value="mawari2">二段廻り</option><option value="mawari6">六段廻り</option><option value="mawari9">九段廻り</option></select></div><div class="field kb-straight-wrap"><label>踏面(mm)</label><input type="number" class="kb-fummen" placeholder="例: 225" inputmode="decimal" oninput="updateKaidanLayout()"></div></div>
+            <div class="row kb-straight-wrap"><div class="field"><label>段数</label><input type="number" class="kb-steps" placeholder="例: 6" min="1" max="30" inputmode="decimal" oninput="updateKaidanLayout()"></div><div class="field"><label>水平距離（自動）</label><input type="text" class="kb-horiz-disp" readonly style="opacity:.7;background:var(--bg3);font-weight:700;color:var(--accent)"></div></div>
+            <div class="kb-mawari-info" style="font-size:11px;color:var(--blue);margin-top:4px"></div>
+          </div>
+        </div>
+        <div class="btn-group">
+          <button class="btn-sub" onclick="addKaidanBlock()">＋ ブロック追加</button>
+          <button class="btn-sub" onclick="removeKaidanBlock()">－ 削除</button>
+        </div>
+        <div id="kaidan-layout-preview" style="font-size:12px;color:var(--text2);background:var(--bg2);border-radius:6px;padding:10px;margin:8px 0;line-height:1.8"></div>
+        <button class="calc-btn" onclick="calcKaidan()">計算する</button>
+        <div id="kaidan-result"></div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">↩️ 廻り階段 側板計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="mw-module"><option value="910" selected>910mod</option><option value="900">900mod</option></select></div>
+          <div class="field"><label>ボード厚</label><select id="mw-board"><option value="15" selected>15mm</option><option value="12.5">12.5mm</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field" id="mw-height-wrap"><label id="mw-height-label">段分の高さ（自動）(mm)</label><input type="number" id="mw-height" inputmode="decimal"></div>
+          <div class="field"><label>廻り段数</label><select id="mw-dans" onchange="updateMawariLabel()"><option value="2">二段廻り</option><option value="3" selected>三段廻り</option><option value="6">六段廻り</option><option value="9">九段廻り</option></select></div>
+        </div>
+        <div class="field"><label>1段の蹴上げ(mm)</label><input type="number" id="mw-keage1" placeholder="例: 200" inputmode="decimal" oninput="syncMawariKeage()"></div>
+        <button class="calc-btn" onclick="calcMawari()">計算する</button>
+        <div id="mawari-result"></div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">📐 側板 勾配計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>蹴上げ(mm)</label><input type="number" id="sp-keage" placeholder="例: 200" inputmode="decimal"></div>
+          <div class="field"><label>踏面(mm)</label><input type="number" id="sp-fummen" placeholder="例: 225" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>段数（省略可）</label><input type="number" id="sp-steps" placeholder="例: 14" inputmode="decimal"></div>
+          <div class="field"><label>段板厚み（省略可）</label><input type="number" id="sp-thickness" placeholder="例: 30" inputmode="decimal"></div>
+        </div>
+        <button class="calc-btn" onclick="calcSokupan()">計算する</button>
+        <div id="sokupan-result"></div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">📐 廻り段板 墨付け（側板あり）</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="db-module"><option value="900" selected>900mod</option><option value="910">910mod</option></select></div>
+          <div class="field"><label>ボード厚</label><select id="db-board"><option value="15" selected>15mm</option><option value="12.5">12.5mm</option></select></div>
+        </div>
+        <button class="calc-btn" onclick="calcDanban()">計算する</button>
+        <div id="danban-result"></div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">✂️ 直段板 切断長さ</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="dn-module"><option value="910" selected>910mm</option><option value="900">900mm</option></select></div>
+          <div class="field"><label>柱幅</label><select id="dn-hashira"><option value="105" selected>105mm</option><option value="120">120mm</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>ボード厚</label><select id="dn-board"><option value="15" selected>15mm</option><option value="12.5">12.5mm</option><option value="9.5">9.5mm</option><option value="0">無し</option></select></div>
+          <div class="field"><label>固定差引(mm)</label><input type="number" id="dn-fixed" value="25" inputmode="decimal"></div>
+        </div>
+        <button class="calc-btn" onclick="calcDanbanCut()">計算する</button>
+        <div id="danban-cut-result"></div>
+      </div>
+    </details>
+    <div id="calc-kaidan-wrap"></div>
+  </div>
+</div>
+
+<!-- 開口 -->
+<div id="screen-kaiko" class="screen calc-screen">
+  <div class="screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>🚪 開口計算</h2></div>
+  <div class="content-area">
+    <details class="card">
+      <summary class="card-title">⚙️ 共通設定</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="kaiko-module" onchange="try{renderDoorMatrix();}catch(e){} try{renderSashMatrix();}catch(e){}"><option value="910" selected>910mod</option><option value="900">900mod</option></select></div>
+          <div class="field"><label>ボード厚</label><select id="kaiko-board" onchange="try{renderDoorMatrix();}catch(e){} try{renderSashMatrix();}catch(e){}"><option value="12.5" selected>12.5mm</option><option value="15">15mm</option><option value="9.5">9.5mm</option><option value="0">無し</option></select></div>
+          <div class="field"><label>柱幅</label><select id="kaiko-hashira" onchange="try{renderDoorMatrix();}catch(e){} try{renderSashMatrix();}catch(e){}"><option value="105" selected>105mm</option><option value="120">120mm</option></select></div>
+        </div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">🚪 ドア開口計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>ドアサイズ幅</label>
+            <select id="door-w" onchange="document.getElementById('door-cw').style.display=this.value==='custom'?'block':'none'">
+              <option value="648" selected>648mm</option><option value="734">734mm</option><option value="754">754mm</option><option value="1188">1188mm</option><option value="1324">1324mm</option><option value="1454">1454mm</option><option value="1644">1644mm</option><option value="custom">カスタム入力</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>カスタム幅(mm)</label><input type="number" id="door-cw" placeholder="カスタム時入力" inputmode="decimal" style="display:none;margin-bottom:8px"></div>
+        <div class="row">
+          <div class="field"><label>ドアボード</label><select id="door-board" onchange="document.getElementById('door-board-cw').style.display=this.value==='custom'?'block':'none'"><option value="0">無し</option><option value="12.5">12.5mm</option><option value="15">15mm</option><option value="9.5">9.5mm</option><option value="custom">カスタム</option></select></div>
+          <div class="field"><label>ボード面数</label><select id="door-board-side"><option value="two" selected>両側</option><option value="one">片側</option></select></div>
+        </div>
+        <input type="number" id="door-board-cw" placeholder="ボード厚カスタム(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <div class="row">
+          <div class="field"><label>幅CL片側(mm)</label><input type="number" id="door-clear-w" value="5" inputmode="decimal" oninput="try{renderDoorMatrix();}catch(e){}"></div>
+          <div class="field"><label>荒開口加算(mm)</label><input type="number" id="door-rough-w" value="0" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>縦木サイズ</label><select id="door-tategit" onchange="document.getElementById('door-tategit-cw').style.display=this.value==='custom'?'block':'none'"><option value="0">なし</option><option value="30">30mm</option><option value="45">45mm</option><option value="60">60mm</option><option value="custom">カスタム</option></select></div>
+          <div class="field"><label>縦木面数</label><select id="door-tategit-side"><option value="two" selected>両側</option><option value="one">片側</option></select></div>
+        </div>
+        <input type="number" id="door-tategit-cw" placeholder="縦木カスタム(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <button class="calc-btn" onclick="calcDoor()">計算する</button>
+        <div id="door-result"></div>
+        <div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:6px">📋 全サイズ一覧表</div><div id="door-matrix" style="overflow-x:auto;font-size:11px"></div></div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">🪟 サッシ開口計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>サッシ幅</label>
+            <select id="sash-w" onchange="document.getElementById('sash-cw').style.display=this.value==='custom'?'block':'none'">
+              <option value="300" selected>300mm</option><option value="405">405mm</option><option value="640">640mm</option><option value="730">730mm</option><option value="780">780mm</option><option value="924">924mm</option><option value="1185">1185mm</option><option value="1235">1235mm</option><option value="1640">1640mm</option><option value="1690">1690mm</option><option value="custom">カスタム入力</option>
+            </select>
+          </div>
+        </div>
+        <input type="number" id="sash-cw" placeholder="カスタム幅(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <div class="row">
+          <div class="field"><label>工法</label><select id="sash-method"><option value="0" selected>半外付け(0)</option><option value="40">内付け(+40)</option><option value="-40">外付け(−40)</option></select></div>
+          <div class="field"><label>幅CL片側(mm)</label><input type="number" id="sash-clear-w" value="5" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>荒開口加算(mm)</label><input type="number" id="sash-rough-w" value="0" inputmode="decimal"></div>
+          <div class="field"><label>縦木サイズ</label><select id="sash-tategit" onchange="document.getElementById('sash-tategit-cw').style.display=this.value==='custom'?'block':'none'"><option value="0">なし</option><option value="30">30mm</option><option value="45">45mm</option><option value="60">60mm</option><option value="custom">カスタム</option></select></div>
+        </div>
+        <input type="number" id="sash-tategit-cw" placeholder="縦木カスタム(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <div class="field"><label>縦木面数</label><select id="sash-tategit-side"><option value="two" selected>両側</option><option value="one">片側</option></select></div>
+        <button class="calc-btn" onclick="calcSash()" style="margin-top:10px">計算する</button>
+        <div id="sash-result"></div>
+        <div style="margin-top:12px"><div id="sash-matrix" style="overflow-x:auto;font-size:11px"></div></div>
+      </div>
+    </details>
+    <div id="calc-kaiko-wrap"></div>
+  </div>
+</div>
+
+<!-- 天井 -->
+<div id="screen-tenjo" class="screen calc-screen">
+  <div class="screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>🏠 天井計算</h2></div>
+  <div class="content-area">
+    <!-- ★ 防火設定 - 天井専用 -->
+    <div style="background:#fff8e0;border:1px solid #e0c840;border-radius:8px;padding:12px;margin-bottom:10px">
+      <div class="toggle-row">
+        <div class="toggle-label">🔥 防火・準防火対応（外壁接触部 −15mm）</div>
+        <label class="toggle"><input type="checkbox" id="tenjo-boka-toggle" checked><span class="toggle-slider"></span></label>
+      </div>
+      <div style="font-size:11px;color:#7a6020;margin-top:4px">ONの場合、外壁に接する天井下地材の寸法から15mmを減算します。入り隅タブには干渉しません。</div>
+    </div>
+    <details class="card" open>
+      <summary class="card-title">📐 天井下地計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="tj-module" onchange="updateTenjoModule()"><option value="910" selected>910mod</option><option value="900">900mod</option></select></div>
+          <div class="field"><label>柱幅</label><select id="tj-hashira"><option value="105" selected>105mm</option><option value="120">120mm</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>部屋の長さ（野縁方向）</label><select id="tj-length-sel" onchange="updateTenjoLength()"></select></div>
+          <div class="field"><label>部屋の幅（野縁受け方向）</label><select id="tj-width-sel" onchange="updateTenjoWidth()"></select></div>
+        </div>
+        <div id="tj-length-custom-wrap" style="display:none" class="row"><div class="field"><label>長さ カスタム(mm)</label><input type="number" id="tj-length-custom" inputmode="decimal"></div></div>
+        <div id="tj-width-custom-wrap" style="display:none" class="row"><div class="field"><label>幅 カスタム(mm)</label><input type="number" id="tj-width-custom" inputmode="decimal"></div></div>
+        <div class="row">
+          <div class="field"><label>野縁ピッチ(mm)</label><input type="number" id="tj-noken-pitch" value="303" inputmode="decimal"></div>
+          <div class="field"><label>野縁受けピッチ(mm)</label><input type="number" id="tj-nokenjuke-pitch" value="910" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>吊木ピッチ(mm)</label><input type="number" id="tj-tsurigi-pitch" value="910" inputmode="decimal"></div>
+          <div class="field"><label>野縁サイズ</label><select id="tj-noken-size" onchange="updateNokenSize()"><option value="35x35" selected>35×35mm</option><option value="custom">カスタム</option></select></div>
+        </div>
+        <div id="tj-noken-custom-wrap" style="display:none" class="row">
+          <div class="field"><label>野縁幅(mm)</label><input type="number" id="tj-noken-cw" inputmode="decimal"></div>
+          <div class="field"><label>野縁せい(mm)</label><input type="number" id="tj-noken-ch" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>野縁方向ボード厚</label><select id="tj-noken-board-thick"><option value="0" selected>無し</option><option value="9.5">9.5mm</option><option value="12.5">12.5mm</option><option value="15">15mm</option></select></div>
+          <div class="field"><label>野縁方向ボード枚数</label><select id="tj-noken-board-count"><option value="0" selected>0枚</option><option value="1">1枚</option><option value="2">2枚</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>野縁受け方向ボード厚</label><select id="tj-juke-board-thick"><option value="0" selected>無し</option><option value="9.5">9.5mm</option><option value="12.5">12.5mm</option><option value="15">15mm</option></select></div>
+          <div class="field"><label>野縁受け方向ボード枚数</label><select id="tj-juke-board-count"><option value="0" selected>0枚</option><option value="1">1枚</option><option value="2">2枚</option></select></div>
+        </div>
+        <button class="calc-btn" onclick="calcTenjoShitaji()">計算する</button>
+        <div id="tenjo-shitaji-result"></div>
+      </div>
+    </details>
+    <div id="calc-tenjo-wrap"></div>
+  </div>
+</div>
+
+<!-- FS -->
+<div id="screen-fstop" class="screen calc-screen">
+  <div class="screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>🔥 ファイヤーストップ</h2></div>
+  <div class="content-area">
+    <details class="card">
+      <summary class="card-title">🔥 ボードFS計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>階高(mm)</label><input type="number" id="fs-kaikoh" placeholder="例: 2800" inputmode="decimal"></div>
+          <div class="field"><label>天井高(mm)</label><input type="number" id="fs-tenjoh" placeholder="例: 2400" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>ボード厚</label><select id="fs-board"><option value="9.5">9.5mm</option><option value="12.5" selected>12.5mm</option><option value="15">15mm</option></select></div>
+          <div class="field"><label>CL(mm)</label><input type="number" id="fs-clear" value="5" inputmode="decimal"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>梁幅</label><select id="fs-beam" onchange="document.getElementById('fs-beam-cw').style.display=this.value==='custom'?'block':'none'"><option value="150" selected>150mm</option><option value="180">180mm</option><option value="210">210mm</option><option value="240">240mm</option><option value="270">270mm</option><option value="300">300mm</option><option value="custom">カスタム</option></select></div>
+        </div>
+        <input type="number" id="fs-beam-cw" placeholder="梁幅カスタム(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <button class="calc-btn" onclick="calcFireStop()">計算する</button>
+        <div id="fstop-result"></div>
+      </div>
+    </details>
+    <details class="card">
+      <summary class="card-title">🪵 木FS計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="wfs-module"><option value="910" selected>910mod</option><option value="900">900mod</option></select></div>
+          <div class="field"><label>ボード厚</label><select id="wfs-board" onchange="document.getElementById('wfs-board-cw').style.display=this.value==='custom'?'block':'none'"><option value="0" selected>無し</option><option value="9.5">9.5mm</option><option value="12.5">12.5mm</option><option value="15">15mm</option><option value="custom">カスタム</option></select></div>
+        </div>
+        <input type="number" id="wfs-board-cw" placeholder="ボード厚カスタム(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <div class="field"><label>カスタム減算(mm)</label><input type="number" id="wfs-minus" value="0" inputmode="decimal"></div>
+        <button class="calc-btn" onclick="calcWoodFireStop()" style="margin-top:10px">計算する</button>
+        <div id="wfs-result"></div>
+      </div>
+    </details>
+    <div id="calc-fstop-wrap"></div>
+  </div>
+</div>
+
+<!-- ★ 入り隅 - 新仕様（階高 - 梁成 - 59） -->
+<div id="screen-irisumi" class="screen calc-screen">
+  <div class="screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>📐 入り隅計算</h2></div>
+  <div class="content-area">
+    <!-- 計算式説明 -->
+    <div style="background:#f0f4ff;border:1px solid #b0c8e8;border-radius:8px;padding:12px;margin-bottom:10px;font-size:12px;color:#1a3a70;line-height:1.9">
+      <strong>📐 カット寸法 ＝ 階高 − 梁成 − 59</strong><br>
+      本数：L字×2本 / T字×4本 / 十字×8本<br>
+      <span style="color:#c03020">※ 防火ボード -15mm は入り隅では適用しません</span>
+    </div>
+    <details class="card" open>
+      <summary class="card-title">📐 入り隅 カット寸法計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>階高(mm)</label><input type="number" id="ir-kaikoh" placeholder="例: 2800" inputmode="decimal" oninput="calcIrisumi()"></div>
+        </div>
+        <!-- 梁成入力テーブル -->
+        <div style="font-size:12px;font-weight:700;color:var(--text3);margin:10px 0 6px;letter-spacing:1px">梁成ごとの入り隅形状と箇所数</div>
+        <div id="irisumi-beam-rows">
+          <!-- 動的に追加 -->
+        </div>
+        <div class="btn-group" style="margin-bottom:10px">
+          <button class="btn-sub" onclick="addBeamRow()">＋ 梁成を追加</button>
+          <button class="btn-sub" onclick="removeBeamRow()">－ 削除</button>
+        </div>
+        <button class="calc-btn" onclick="calcIrisumi()">カットリストを生成</button>
+        <div id="irisumi-result"></div>
+      </div>
+    </details>
+    <div id="calc-irisumi-wrap"></div>
+  </div>
+</div>
+
+<!-- 防水 -->
+<div id="screen-bousui" class="screen calc-screen">
+  <div class="screen-header"><button class="back-btn" onclick="goHome()">◀ ホーム</button><h2>💧 防水下地計算</h2></div>
+  <div class="content-area">
+    <details class="card">
+      <summary class="card-title">💧 防水下地 寸法計算</summary>
+      <div class="card-body">
+        <div class="row">
+          <div class="field"><label>モジュール</label><select id="bw-module" onchange="updateBousuiPitchOptions()"><option value="910" selected>910mod</option><option value="900">900mod</option></select></div>
+          <div class="field"><label>勾配</label><select id="bw-kobai-sel" onchange="document.getElementById('bw-kobai-cw').style.display=this.value==='custom'?'block':'none'"><option value="0.01">1/100</option><option value="0.02" selected>2/100</option><option value="0.03">3/100</option><option value="0.05">5/100</option><option value="0.1">1/10</option><option value="custom">カスタム</option></select></div>
+        </div>
+        <input type="number" id="bw-kobai-cw" placeholder="勾配カスタム(例:0.05)" step="0.001" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <div class="row">
+          <div class="field"><label>縦方向ピッチ</label><select id="bw-tate-pitch-sel" onchange="document.getElementById('bw-tate-cw').style.display=this.value==='custom'?'block':'none'"></select></div>
+          <div class="field"><label>横方向ピッチ</label><select id="bw-yoko-pitch-sel" onchange="document.getElementById('bw-yoko-cw').style.display=this.value==='custom'?'block':'none'"></select></div>
+        </div>
+        <input type="number" id="bw-tate-cw" placeholder="縦ピッチカスタム(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <input type="number" id="bw-yoko-cw" placeholder="横ピッチカスタム(mm)" inputmode="decimal" style="display:none;margin-bottom:8px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:9px 10px;font-size:15px;width:100%">
+        <div class="row">
+          <div class="field"><label>溝幅(mm)</label><input type="number" id="bw-mizo-width" value="120" inputmode="decimal"></div>
+          <div class="field"><label>ドレン位置</label><select id="bw-drain-pos"><option value="left" selected>左</option><option value="right">右</option><option value="none">なし</option></select></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>縦カスタム差引(mm)</label><input type="number" id="bw-tate-minus" value="0" inputmode="decimal"></div>
+          <div class="field"><label>縦構造加算（自動）(mm)</label><input type="number" id="bw-tate-kozo-add" value="0" readonly style="background:var(--bg3);color:var(--accent);font-weight:700"></div>
+        </div>
+        <div class="row">
+          <div class="field"><label>横カスタム差引(mm)</label><input type="number" id="bw-yoko-minus" value="0" inputmode="decimal"></div>
+          <div class="field"><label>横構造加算 = 溝反対側高さ(mm)</label><input type="number" id="bw-yoko-kozo-add" value="24" inputmode="decimal" oninput="updateTateKozoAdd()"></div>
+        </div>
+        <button class="calc-btn" onclick="calcBousui()">計算する</button>
+        <div id="bousui-result"></div>
+      </div>
+    </details>
+    <div id="calc-bousui-wrap"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// アクセスキー認証ガード（現在無効）
+// ══════════════════════════════════════
+/*
+(function(){
+  var host = location.hostname;
+  var isLocal = host === '' || host === 'localhost' || host === '127.0.0.1';
+  if (sessionStorage.getItem('daiku_admin_auth')) return;
+  var STORAGE_KEY = 'daiku_access_key';
+  var STORAGE_EXPIRY = 'daiku_key_expiry';
+  var LOGIN_URL = 'login.html';
+  var saved = localStorage.getItem(STORAGE_KEY);
+  var expiry = localStorage.getItem(STORAGE_EXPIRY);
+  if (!saved || !expiry || Date.now() >= parseInt(expiry)) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_EXPIRY);
+    location.href = LOGIN_URL;
+  }
+})();
+*/
+// ══════════════════════════════════════
+// グローバル状態
+// ══════════════════════════════════════
+var _pdfParsedData = null; // PDF解析結果を保持
+
+// ── ナビゲーション ──
+function goTo(id){
+  document.getElementById('screen-home').classList.remove('active');
+  document.querySelectorAll('.calc-screen').forEach(s=>s.classList.remove('active'));
+  const sc=document.getElementById('screen-'+id);
+  if(sc){sc.classList.add('active');window.scrollTo(0,0);}
+}
+function goHome(){
+  document.querySelectorAll('.calc-screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-home').classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ══════════════════════════════════════
+// 防火地域設定ボード
+// ══════════════════════════════════════
+var _fireZone = '準防火'; // デフォルト
+
+var FIRE_ZONE_SPEC = {
+  '非防火': {
+    color: '#4a5a3a', border: '#6a7a4a', text: '#d0e8b0',
+    badge: '#4a7a3a',
+    spec: '制限なし。標準仕様で施工可能。\n天井下地：標準寸法\nFS：標準寸法\nボード：通常品',
+    bokaDeduct: 0,
+    boardSpec: '石膏ボード12.5mm（通常品）'
+  },
+  '準防火': {
+    color: '#c04020', border: '#ff6040', text: '#fff',
+    badge: '#c04020',
+    spec: '準防火地域（建基法第22条区域含む）\n天井下地：外壁接触部 −15mm\nFS：必須・全箇所施工\nボード：強化石膏ボード15mm or 12.5mm×2枚',
+    bokaDeduct: 15,
+    boardSpec: '強化石膏ボード15mm or 12.5mm×2枚'
+  },
+  '準耐火': {
+    color: '#7a3a10', border: '#c06020', text: '#ffe0c0',
+    badge: '#a05020',
+    spec: '準耐火構造（45分・60分）\n天井下地：外壁接触部 −15mm\nFS：必須\nボード：強化石膏ボード15mm×2枚（45分）\n　　　　強化石膏ボード21mm（60分）',
+    bokaDeduct: 15,
+    boardSpec: '強化石膏ボード15mm×2枚（45分準耐火）'
+  },
+  '防火': {
+    color: '#8a1a10', border: '#d03020', text: '#ffd0c0',
+    badge: '#a02010',
+    spec: '防火地域（建基法第61条）\n天井下地：外壁接触部 −15mm\nFS：必須・全箇所\nボード：強化石膏ボード15mm×2枚以上\n開口部：防火設備設置必須',
+    bokaDeduct: 15,
+    boardSpec: '強化石膏ボード15mm×2枚以上（防火構造）'
+  },
+  '耐火': {
+    color: '#4a0a60', border: '#9030c0', text: '#f0d0ff',
+    badge: '#6a1a90',
+    spec: '耐火構造（1時間・2時間）\n天井下地：外壁接触部 −15mm\nFS：全箇所必須・開口部も処理\nボード：強化石膏ボード21mm×2枚（1時間）\n開口部：特定防火設備必須',
+    bokaDeduct: 15,
+    boardSpec: '強化石膏ボード21mm×2枚（1時間耐火）'
+  }
+};
+
+function setFireZone(zone) {
+  _fireZone = zone;
+  var spec = FIRE_ZONE_SPEC[zone];
+
+  // バッジ更新
+  var badge = document.getElementById('fire-zone-badge');
+  badge.textContent = zone + '地域';
+  badge.style.background = spec.badge;
+
+  // ボタン状態更新
+  document.querySelectorAll('.fz-btn').forEach(function(btn) {
+    var active = btn.getAttribute('data-zone') === zone;
+    btn.classList.toggle('active', active);
+    if (active) {
+      btn.style.background = spec.color;
+      btn.style.borderColor = spec.border;
+      btn.style.color = spec.text;
+    }
+  });
+
+  // 仕様サマリー更新
+  document.getElementById('fire-zone-spec').innerHTML =
+    spec.spec.split('\n').map(function(l) {
+      return '<div>' + l + '</div>';
+    }).join('') +
+    '<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.2);font-weight:700;color:#ffd0a0">📋 ボード仕様：' + spec.boardSpec + '</div>';
+
+  // 天井タブの防火トグルと同期
+  var toggle = document.getElementById('tenjo-boka-toggle');
+  if (toggle) toggle.checked = spec.bokaDeduct > 0;
+}
+
+function onFireZoneAutoChange() {
+  var auto = document.getElementById('fire-zone-auto').checked;
+  document.querySelectorAll('.fz-btn').forEach(function(btn) {
+    btn.disabled = auto;
+    btn.style.opacity = auto ? '0.4' : '';
+  });
+  if (auto) {
+    document.getElementById('fire-zone-spec').innerHTML += '<div style="margin-top:6px;color:#90d0ff">🤖 AI解析時に図面から自動判定します</div>';
+  }
+}
+
+// ══════════════════════════════════════
+// 複数ファイルスロット管理
+// ══════════════════════════════════════
+var _slotFiles = [null, null, null, null]; // base64
+var _slotTypes = [null, null, null, null];
+var _slotLabels = ['平面図', '構造図・梁伏図', '立面図・矩計図', 'プレカット図'];
+
+function triggerFileSlot(idx) {
+  var slots = document.querySelectorAll('.slot-file-input');
+  if (slots[idx]) slots[idx].click();
+}
+
+function onSlotFileSelect(e, idx) {
+  var f = e.target.files[0];
+  if (!f) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    _slotFiles[idx] = ev.target.result.split(',')[1];
+    _slotTypes[idx] = f.type || (f.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+    // UIフィードバック
+    var zone = document.querySelectorAll('.file-slot-zone')[idx];
+    zone.classList.add('has-file');
+    zone.querySelector('.slot-icon').textContent = '✅';
+    zone.querySelector('.slot-sub').textContent = f.name.length > 14 ? f.name.slice(0,12)+'…' : f.name;
+    document.getElementById('slot-info-' + idx).textContent = Math.round(f.size/1024) + 'KB';
+    // カウント更新
+    var count = _slotFiles.filter(function(x){return x!==null;}).length;
+    document.getElementById('slot-count-label').textContent = count + '枚選択中';
+    document.getElementById('pdf-analyze-btn').disabled = false;
+  };
+  reader.readAsDataURL(f);
+}
+
+async function analyzeMultiFiles() {
+  var files = _slotFiles.map(function(b, i){ return b ? {base64:b, type:_slotTypes[i], label:_slotLabels[i]} : null; }).filter(Boolean);
+  if (files.length === 0) { alert('図面を1枚以上選択してください'); return; }
+
+  document.getElementById('pdf-analyzing').style.display = 'block';
+  document.getElementById('pdf-analyzing-sub').textContent = files.length + '枚の図面を解析中…';
+  document.getElementById('pdf-result').innerHTML = '';
+  document.getElementById('pdf-apply-card').style.display = 'none';
+
+  var zone = document.getElementById('fire-zone-auto').checked ? 'AUTO（図面から判定）' : _fireZone;
+  var prompt = buildAnalyzePromptMulti(files.map(function(f){return f.label;}), zone);
+
+  try {
+    var res = await callGeminiAPIMulti(prompt, files);
+    var data = await res.json();
+    document.getElementById('pdf-analyzing').style.display = 'none';
+    if (!res.ok || data.error) { showPdfError(JSON.stringify(data.error || data)); return; }
+    var rawText = extractGeminiText(data);
+    var jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) { showPdfError('JSON形式の応答を取得できませんでした。\n\n応答：\n' + rawText); return; }
+    var parsed = JSON.parse(jsonMatch[0]);
+    // AI判定の防火地域を反映
+    if (document.getElementById('fire-zone-auto').checked && parsed.fire_zone) {
+      setFireZone(parsed.fire_zone);
+    }
+    _pdfParsedData = parsed;
+    renderPdfResult(parsed, 'pdf-result');
+  } catch(err) {
+    document.getElementById('pdf-analyzing').style.display = 'none';
+    showPdfError('通信エラー: ' + err.message);
+  }
+}
+
+async function callGeminiAPIMulti(prompt, files) {
+  var cfg = getGeminiConfig();
+  return fetch(cfg.url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({prompt: prompt, model: cfg.model, mediaContents: files})
+  });
+}
+
+// ══════════════════════════════════════
+// 改善版プロンプト（複数図面対応・木造専用）
+// ══════════════════════════════════════
+function buildAnalyzePromptMulti(fileLabels, fireZone) {
+  var figureList = fileLabels.map(function(l, i){ return '  図面' + (i+1) + '：' + l; }).join('\n');
+  return `あなたは木造軸組工法（在来工法）に精通したベテラン大工兼積算士です。
+添付の図面（${fileLabels.length}枚）を解析してください。
+
+【添付図面の内訳】
+${figureList}
+
+【防火地域指定】
+${fireZone}
+※ AUTOの場合は図面・特記仕様書から判定し fire_zone に記載すること
+
+【絶対ルール】
+- 図面に明記されている数値のみ使用すること
+- 推測・補完・標準値での補填は禁止
+- 読み取れない項目は必ずnullにすること
+- 説明文・前置き・markdown記法は一切不要、JSONのみ返すこと
+- 複数図面がある場合、各図面の情報を統合して最も精度の高い値を採用すること
+
+【図面種別ごとの読み方ルール】
+■ 平面図
+  - モジュール：通り芯間隔（910・1820・2730等）
+  - 部屋名と内法寸法：各部屋の文字と寸法線から読む
+  - 入り隅形状：壁交差パターン（L字=2面/T字=3面/十字=4面）
+  - 開口幅：ドア・サッシの寸法線または建具記号
+
+■ 矩計図・断面図・立面図
+  - 階高：FL～CLまたはFL～梁下の垂直寸法
+  - 天井高：FL～仕上天井面の寸法
+  - 梁成：梁のせい（H=○○またはせい○○）
+  - ボード厚：仕上げ材の厚み
+
+■ 構造図・梁伏図
+  - 梁成：断面記号の高さ寸法（□○○または○○×○○）
+  - スパン・梁位置
+
+■ プレカット図
+  - 梁成・仕口形状・加工寸法
+
+【入り隅カウントルール】
+- L字：壁2方向交差（部屋コーナー）
+- T字：壁3方向交差（間仕切り突き当たり）
+- 十字：壁4方向交差
+- ドア・開口部のある壁はカウントしない
+
+【出力JSONフォーマット】
+{
+  "confidence": "high/medium/low",
+  "fire_zone": "${fireZone === 'AUTO（図面から判定）' ? '図面から判定した値を記載' : fireZone}",
+  "notes": "読み取れなかった項目・理由・推奨追加図面",
+  "figure_types": ["読み取った図面種別リスト"],
+
+  "common": {
+    "module": null,
+    "hashira": null,
+    "board_thick": null,
+    "kaikoh": null,
+    "tenjoh": null
+  },
+
+  "rooms": [
+    {
+      "name": "部屋名",
+      "floor": "階数（例：2階）",
+      "length": null,
+      "width": null,
+      "irisumi": [
+        {"beam_size": null, "shape": "L", "count": 0},
+        {"beam_size": null, "shape": "T", "count": 0},
+        {"beam_size": null, "shape": "X", "count": 0}
+      ]
+    }
+  ],
+
+  "tenjo": {"length": null, "width": null, "noken_pitch": 303, "nokenjuke_pitch": 910},
+  "fstop": {"beam_width": null},
+  "kobai": {"kobai": null, "noki_suihei": null, "jima_len": null, "hana_len": null},
+  "kaidan": {"fummen": null},
+  "bousui": {"kobai": null, "tate_pitch": null, "yoko_pitch": null},
+  "kaiko": {"door_widths": [], "sash_widths": []}
+}`;
+}
+
+function buildAnalyzePrompt() {
+  return buildAnalyzePromptMulti(['図面'], _fireZone);
+}
+
+// ══════════════════════════════════════
+// PDF / 画像解析
+// ══════════════════════════════════════
+var _selectedFile = null;
+var _selectedFileBase64 = null;
+var _selectedFileType = null;
+
+function onFileSelect(e){
+  var f = e.target.files[0];
+  if(!f) return;
+  _selectedFile = f;
+  var info = document.getElementById('pdf-file-info');
+  info.style.display = 'block';
+  info.innerHTML = '📁 <strong>'+f.name+'</strong>　'+Math.round(f.size/1024)+'KB　('+f.type+')';
+  document.getElementById('pdf-analyze-btn').disabled = false;
+
+  // base64変換
+  var reader = new FileReader();
+  reader.onload = function(ev){
+    var result = ev.target.result;
+    _selectedFileBase64 = result.split(',')[1];
+    _selectedFileType = f.type || (f.name.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg');
+  };
+  reader.readAsDataURL(f);
+}
+
+async function analyzePDF(){
+  if(!_selectedFileBase64){ alert('ファイルを選択してください'); return; }
+  document.getElementById('pdf-analyzing').style.display = 'block';
+  document.getElementById('pdf-result').innerHTML = '';
+  document.getElementById('pdf-apply-card').style.display = 'none';
+  var prompt = buildAnalyzePrompt();
+  try {
+    var res = await callGeminiAPI(prompt, { base64: _selectedFileBase64, mediaType: _selectedFileType });
+    var data = await res.json();
+    document.getElementById('pdf-analyzing').style.display = 'none';
+    if(!res.ok || data.error){ showPdfError(JSON.stringify(data.error||data)); return; }
+    var rawText = extractGeminiText(data);
+    var jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if(!jsonMatch){ showPdfError('JSON形式の応答を取得できませんでした。\n\n応答：\n'+rawText); return; }
+    var parsed = JSON.parse(jsonMatch[0]);
+    _pdfParsedData = parsed;
+    renderPdfResult(parsed, 'pdf-result');
+  } catch(err) {
+    document.getElementById('pdf-analyzing').style.display = 'none';
+    showPdfError('通信エラー: ' + err.message);
+  }
+}
+
+// ══════════════════════════════════════
+// テキスト貼り付け解析
+// ══════════════════════════════════════
+async function analyzeText(){
+  var text = document.getElementById('pdf-text-input').value.trim();
+  if(!text){ alert('テキストを入力してください'); return; }
+  document.getElementById('text-analyzing').style.display = 'block';
+  document.getElementById('text-result').innerHTML = '';
+  document.getElementById('pdf-apply-card').style.display = 'none';
+  var prompt = buildAnalyzePrompt() + '\n\n以下のテキストを解析してください：\n' + text;
+  try {
+    var res = await callGeminiAPI(prompt, null);
+    var data = await res.json();
+    document.getElementById('text-analyzing').style.display = 'none';
+    if(!res.ok || data.error){
+      document.getElementById('text-result').innerHTML = '<div class="error-box" style="margin-top:10px">⚠️ '+JSON.stringify(data.error||data)+'</div>';
+      return;
+    }
+    var rawText = extractGeminiText(data);
+    var jsonMatch = rawText.match(/\{[\s\S]*\}/);
+    if(!jsonMatch){ document.getElementById('text-result').innerHTML='<div class="error-box" style="margin-top:10px">⚠️ 解析できませんでした</div>'; return; }
+    var parsed = JSON.parse(jsonMatch[0]);
+    _pdfParsedData = parsed;
+    if(parsed.common && parsed.common.kaikoh) document.getElementById('ir-kaikoh').value = parsed.common.kaikoh;
+    renderPdfResult(parsed, 'text-result');
+  } catch(err) {
+    document.getElementById('text-analyzing').style.display = 'none';
+    document.getElementById('text-result').innerHTML = '<div class="error-box" style="margin-top:10px">⚠️ 通信エラー: '+err.message+'</div>';
+  }
+}
+
+
+
+// ══════════════════════════════════════
+// Gemini API 呼び出し
+// 環境自動判別：
+// ══════════════════════════════════════
+// Gemini API 設定（Firebase Functions専用）
+// ══════════════════════════════════════
+function getGeminiConfig(){
+  var host = location.hostname;
+  var model = (document.getElementById('model-selector') && document.getElementById('model-selector').value)
+    || 'gemini-2.0-flash';
+  var base = (host === 'localhost' || host === '127.0.0.1')
+    ? 'http://localhost:5001/kensetsu-nippo/us-central1'
+    : 'https://us-central1-kensetsu-nippo.cloudfunctions.net';
+  return { type: 'firebase', url: base + '/analyzeBlueprint', model: model };
+}
+
+async function callGeminiAPI(prompt, mediaContent){
+  var cfg = getGeminiConfig();
+  var body = { prompt: prompt, model: cfg.model };
+  if(mediaContent) body.mediaContent = mediaContent;
+  return fetch(cfg.url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+}
+
+function extractGeminiText(data){
+  try{
+    return data.candidates[0].content.parts[0].text || '';
+  }catch(e){ return ''; }
+}
+
+function showPdfError(msg){
+  document.getElementById('pdf-result').innerHTML =
+    '<div class="error-box" style="margin-top:10px">⚠️ 解析エラー<br><pre style="font-size:11px;margin-top:6px;white-space:pre-wrap">'+msg+'</pre>'
+    +'<div style="margin-top:12px;background:#f8f4ec;border:1px solid #c8b870;border-radius:6px;padding:10px;font-size:12px;color:var(--text2)">'
+    +'💡 <strong>手動入力で続けるには：</strong><br>各タブを直接開いて手入力してください。</div></div>';
+}
+
+// ── 解析結果を画面に表示 ──
+function renderPdfResult(parsed, targetElId){
+  var elId = targetElId || 'pdf-result';
+  var el = document.getElementById(elId);
+  var conf = parsed.confidence || 'medium';
+  var confColor = conf==='high'?'#1a6a30':conf==='medium'?'#7a5a00':'#8a1a10';
+  var confLabel = conf==='high'?'✅ 高精度':conf==='medium'?'⚠️ 中精度':'❌ 低精度（手動確認推奨）';
+  var c = parsed.common || {};
+  var ir = parsed.irisumi || [];
+
+  var html = '<div class="ai-result-box" style="margin-top:10px">';
+  html += '<div class="ai-result-title">🤖 AI解析結果　<span style="font-size:12px;color:'+confColor+'">'+confLabel+'</span></div>';
+
+  // 共通値
+  if(c.kaikoh||c.module||c.tenjoh){
+    html += '<div style="margin-bottom:10px;padding:8px;background:#fff8f0;border-radius:6px;border:1px solid #e0c090">';
+    html += '<div style="font-size:11px;font-weight:700;color:var(--accent);margin-bottom:4px">共通データ</div>';
+    if(c.module)   html += tag(c.module+'mod');
+    if(c.hashira)  html += tag('柱'+c.hashira+'mm');
+    if(c.kaikoh)   html += tag('階高'+c.kaikoh+'mm');
+    if(c.tenjoh)   html += tag('天井高'+c.tenjoh+'mm');
+    if(c.board_thick) html += tag('ボード'+c.board_thick+'mm');
+    html += '</div>';
+  }
+
+  // 入り隅
+  if(ir.length>0){
+    html += '<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:700;color:var(--text3);margin-bottom:4px">📐 入り隅</div>';
+    var grouped={};
+    ir.forEach(function(item){var k=item.beam_size||0;if(!grouped[k])grouped[k]=[];grouped[k].push(item);});
+    Object.keys(grouped).sort(function(a,b){return a-b;}).forEach(function(bs){
+      html+='<div style="margin-bottom:4px;padding:6px 8px;background:#f4f8ff;border-radius:5px;border:1px solid #c0d0e8">';
+      html+='<span style="font-size:12px;font-weight:700;color:#2a4a80">梁成'+bs+'mm　</span>';
+      grouped[bs].forEach(function(item){
+        var cls=item.shape==='L'?'shape-L':item.shape==='T'?'shape-T':'shape-X';
+        var n=item.shape==='L'?2:item.shape==='T'?4:8;
+        html+='<span class="shape-badge '+cls+'">'+item.shape+'字×'+item.count+'箇所='+item.count*n+'本</span>';
+      });
+      html+='</div>';
+    });
+    html += '</div>';
+  }
+
+  // 各タブデータ概要
+  var sections=[
+    {key:'kobai',  label:'🏠 屋根', fn:function(d){return d?[d.kobai&&'勾配'+d.kobai+'寸', d.noki_suihei&&'軒の出'+d.noki_suihei+'mm', d.jima_len&&'地の間'+d.jima_len+'mm', d.hana_len&&'梁間'+d.hana_len+'mm'].filter(Boolean):[];}},
+    {key:'tenjo',  label:'🏠 天井', fn:function(d){return d?[d.length&&'長さ'+d.length+'mm', d.width&&'幅'+d.width+'mm', d.noken_pitch&&'野縁'+d.noken_pitch+'mmピッチ'].filter(Boolean):[];}},
+    {key:'fstop',  label:'🔥 FS',   fn:function(d){return d?[d.beam_width&&'梁幅'+d.beam_width+'mm'].filter(Boolean):[];}},
+    {key:'kaidan', label:'🪜 階段', fn:function(d){return d?[d.fummen&&'踏面'+d.fummen+'mm'].filter(Boolean):[];}},
+    {key:'bousui', label:'💧 防水', fn:function(d){return d?[d.kobai&&'勾配'+d.kobai, d.tate_pitch&&'縦'+d.tate_pitch+'mm', d.yoko_pitch&&'横'+d.yoko_pitch+'mm'].filter(Boolean):[];}},
+    {key:'kaiko',  label:'🚪 開口', fn:function(d){return d?[(d.door_widths&&d.door_widths.length?'ドア'+d.door_widths.join('/')+'mm':null),(d.sash_widths&&d.sash_widths.length?'サッシ'+d.sash_widths.join('/')+'mm':null)].filter(Boolean):[];}}
+  ];
+  sections.forEach(function(s){
+    var d=parsed[s.key], items=s.fn(d);
+    if(items.length===0) return;
+    html+='<div style="margin-bottom:6px;padding:6px 8px;background:#f8f8f0;border-radius:5px;border:1px solid #d8d8b0">';
+    html+='<span style="font-size:11px;font-weight:700;color:var(--text2)">'+s.label+'　</span>';
+    items.forEach(function(i){html+=tag(i,'#f0f4f8','#3a5a80');});
+    html+='</div>';
+  });
+
+  if(parsed.notes) html+='<div style="font-size:11px;color:var(--text3);padding:6px 8px;background:var(--bg2);border-radius:4px;margin-top:4px">📝 '+parsed.notes+'</div>';
+
+  html += '<div style="margin-top:12px">';
+  html += '<button onclick="applyAllAndCalc()" style="width:100%;background:linear-gradient(135deg,#2a5a30,#3a8a40);color:#fff;border:none;border-radius:8px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;letter-spacing:1px">⚡ 全タブに適用して全カット寸法を計算する</button>';
+  html += '</div>';
+  html += '</div>';
+  el.innerHTML = html;
+
+  document.getElementById('pdf-apply-card').style.display = 'block';
+  document.getElementById('pdf-parsed-summary').innerHTML =
+    '<div style="font-size:12px;color:var(--text3)">解析完了。上の「全タブに適用」ボタンで全計算を実行します。</div>';
+}
+
+function tag(t, bg, col){
+  return '<span style="display:inline-block;background:'+(bg||'#e8f4e8')+';border-radius:3px;padding:2px 7px;font-size:12px;font-weight:700;color:'+(col||'#1a5a20')+';margin:2px">'+t+'</span>';
+}
+
+// ══════════════════════════════════════
+// ★ メイン：全タブ自動入力 → 全計算実行
+// ══════════════════════════════════════
+function applyAllAndCalc(){
+  var p = _pdfParsedData;
+  if(!p){ alert('先に図面を解析してください'); return; }
+  var c = p.common || {};
+  var applied = [];
+
+  // ── 共通値のセット ──
+  function setVal(id, val){
+    if(val == null) return;
+    var el = document.getElementById(id);
+    if(!el) return;
+    // select要素の場合：近い値のオプションを選択
+    if(el.tagName === 'SELECT'){
+      var str = String(val);
+      var found = false;
+      for(var i=0; i<el.options.length; i++){
+        if(el.options[i].value === str){ el.value = str; found = true; break; }
+      }
+      // 近似値を探す
+      if(!found){
+        var num = parseFloat(val), best = null, bestDiff = Infinity;
+        for(var i=0; i<el.options.length; i++){
+          var ov = parseFloat(el.options[i].value);
+          if(!isNaN(ov) && Math.abs(ov-num)<bestDiff){ bestDiff=Math.abs(ov-num); best=el.options[i].value; }
+        }
+        if(best) el.value = best;
+      }
+    } else {
+      el.value = val;
+    }
+  }
+
+  // ── 入り隅 ──
+  if(p.irisumi && p.irisumi.length > 0){
+    if(c.kaikoh){ setVal('ir-kaikoh', c.kaikoh); applied.push('入り隅：階高'+c.kaikoh+'mm'); }
+    var container = document.getElementById('irisumi-beam-rows');
+    container.innerHTML = ''; _irBeamRowCount = 0;
+    p.irisumi.forEach(function(item){ addBeamRow(item.beam_size, item.shape, item.count); });
+    try{ calcIrisumi(); applied.push('入り隅：カットリスト生成'); }catch(e){}
+  }
+
+  // ── FS ──
+  if(c.kaikoh){ setVal('fs-kaikoh', c.kaikoh); }
+  if(c.tenjoh){ setVal('fs-tenjoh', c.tenjoh); }
+  if(p.fstop && p.fstop.beam_width){
+    // FSの梁幅セレクトに近い値を設定
+    var bwStr = String(p.fstop.beam_width);
+    var fsBeam = document.getElementById('fs-beam');
+    var found = false;
+    for(var i=0;i<fsBeam.options.length;i++){if(fsBeam.options[i].value===bwStr){fsBeam.value=bwStr;found=true;break;}}
+    if(!found){ document.getElementById('fs-beam-cw').style.display='block'; document.getElementById('fs-beam-cw').value=p.fstop.beam_width; fsBeam.value='custom'; }
+    applied.push('FS：梁幅'+p.fstop.beam_width+'mm');
+  }
+  if(c.kaikoh && c.tenjoh){ try{ calcFireStop(); applied.push('FSカット寸法計算済'); }catch(e){} }
+
+  // ── 天井 ──
+  if(c.module){ setVal('tj-module', c.module); try{updateTenjoModule();}catch(e){} }
+  if(c.hashira){ setVal('tj-hashira', c.hashira); }
+  if(p.tenjo){
+    var tj = p.tenjo;
+    // 長さ・幅はcustomで入力
+    if(tj.length){
+      document.getElementById('tj-length-sel').value='custom';
+      document.getElementById('tj-length-custom-wrap').style.display='flex';
+      document.getElementById('tj-length-custom').value=tj.length;
+      applied.push('天井：長さ'+tj.length+'mm');
+    }
+    if(tj.width){
+      document.getElementById('tj-width-sel').value='custom';
+      document.getElementById('tj-width-custom-wrap').style.display='flex';
+      document.getElementById('tj-width-custom').value=tj.width;
+      applied.push('天井：幅'+tj.width+'mm');
+    }
+    if(tj.noken_pitch){ setVal('tj-noken-pitch', tj.noken_pitch); }
+    if(tj.nokenjuke_pitch){ setVal('tj-nokenjuke-pitch', tj.nokenjuke_pitch); }
+    if(tj.length && tj.width){ try{ calcTenjoShitaji(); applied.push('天井下地計算済'); }catch(e){} }
+  }
+
+  // ── 屋根 ──
+  if(p.kobai){
+    var kb = p.kobai;
+    if(kb.kobai){ setVal('hafu-kobai', kb.kobai); setVal('sum-kobai', kb.kobai); setVal('tk-kobai', kb.kobai); }
+    if(kb.noki_suihei){ setVal('hafu-suihei', kb.noki_suihei); }
+    if(kb.jima_len){ document.getElementById('hafu-jima-sel').value='custom'; document.getElementById('hafu-jima-custom-wrap').style.display='flex'; document.getElementById('hafu-jima-custom').value=kb.jima_len; }
+    if(kb.hana_len){ document.getElementById('hafu-hana-sel').value='custom'; document.getElementById('hafu-hana-custom-wrap').style.display='flex'; document.getElementById('hafu-hana-custom').value=kb.hana_len; }
+    if(kb.kobai){ try{ autoCalcHafu(); calcSumigi(); calcTaruki(); applied.push('屋根計算済'); }catch(e){} }
+  }
+
+  // ── 階段 ──
+  if(c.kaikoh){ setVal('k-floor', c.kaikoh); }
+  if(c.module){ setVal('k-module', c.module); }
+  if(p.kaidan && p.kaidan.fummen){ setVal('k-fummen', p.kaidan.fummen); applied.push('階段：踏面'+p.kaidan.fummen+'mm'); }
+  if(c.kaikoh){ try{ calcKaidan(); applied.push('階段計算済'); }catch(e){} }
+
+  // ── 防水 ──
+  if(c.module){ setVal('bw-module', c.module); try{updateBousuiPitchOptions();}catch(e){} }
+  if(p.bousui){
+    var bw = p.bousui;
+    if(bw.kobai){
+      var kbStr = String(bw.kobai);
+      var found2 = false;
+      var bwSel = document.getElementById('bw-kobai-sel');
+      for(var i=0;i<bwSel.options.length;i++){if(bwSel.options[i].value===kbStr){bwSel.value=kbStr;found2=true;break;}}
+      if(!found2){ bwSel.value='custom'; document.getElementById('bw-kobai-cw').style.display='block'; document.getElementById('bw-kobai-cw').value=bw.kobai; }
+    }
+    if(bw.tate_pitch){
+      var tateSel = document.getElementById('bw-tate-pitch-sel');
+      var found3=false;
+      for(var i=0;i<tateSel.options.length;i++){if(tateSel.options[i].value===String(bw.tate_pitch)){tateSel.value=String(bw.tate_pitch);found3=true;break;}}
+      if(!found3){tateSel.value='custom';document.getElementById('bw-tate-cw').style.display='block';document.getElementById('bw-tate-cw').value=bw.tate_pitch;}
+    }
+    if(bw.yoko_pitch){
+      var yokoSel = document.getElementById('bw-yoko-pitch-sel');
+      var found4=false;
+      for(var i=0;i<yokoSel.options.length;i++){if(yokoSel.options[i].value===String(bw.yoko_pitch)){yokoSel.value=String(bw.yoko_pitch);found4=true;break;}}
+      if(!found4){yokoSel.value='custom';document.getElementById('bw-yoko-cw').style.display='block';document.getElementById('bw-yoko-cw').value=bw.yoko_pitch;}
+    }
+    if(bw.kobai && bw.tate_pitch && bw.yoko_pitch){ try{ calcBousui(); applied.push('防水計算済'); }catch(e){} }
+  }
+
+  // ── 開口 ──
+  if(c.module){ setVal('kaiko-module', c.module); }
+  if(c.hashira){ setVal('kaiko-hashira', c.hashira); }
+  if(c.board_thick){ setVal('kaiko-board', c.board_thick); }
+  try{ renderDoorMatrix(); }catch(e){}
+  try{ renderSashMatrix(); }catch(e){}
+
+  // ── 完了メッセージ ──
+  var resultEl = document.getElementById('pdf-apply-result');
+  if(!resultEl){
+    var div = document.createElement('div'); div.id='pdf-apply-result';
+    document.getElementById('pdf-apply-card').querySelector('.card-body').appendChild(div);
+  }
+  document.getElementById('pdf-apply-result').innerHTML =
+    '<div class="result-box" style="margin-top:12px"><div class="result-title">⚡ 自動入力・計算完了</div>'+
+    applied.map(function(a){return '<div class="result-item"><span class="result-label" style="color:var(--green)">✅ '+a+'</span></div>';}).join('')+
+    '<div style="margin-top:10px;font-size:12px;color:var(--text3)">各タブを開いて結果を確認してください。読み取れなかった値は手動で補完してください。</div></div>';
+
+  // 入り隅タブへ誘導
+  if(p.irisumi && p.irisumi.length > 0){
+    setTimeout(function(){
+      if(confirm('入り隅カットリストを今すぐ確認しますか？')){
+        goTo('irisumi');
+      }
+    }, 300);
+  }
+}
+
+function applyToIrisumi(){
+  applyAllAndCalc();
+}
+
+// ══════════════════════════════════════
+// 入り隅 - 新ロジック（階高 - 梁成 - 59）
+// ══════════════════════════════════════
+var _irBeamRowCount = 0;
+
+function addBeamRow(beamSize, shape, count){
+  var container = document.getElementById('irisumi-beam-rows');
+  var id = ++_irBeamRowCount;
+  var div = document.createElement('div');
+  div.className = 'ir-beam-row';
+  div.setAttribute('data-id', id);
+  div.style.cssText = 'background:#fff;border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:8px';
+
+  var shapeChecked = function(s){ return s===(shape||'L') ? 'checked' : ''; };
+  div.innerHTML =
+    '<div style="font-size:11px;color:var(--text3);font-weight:700;margin-bottom:6px">梁成 #'+id+'</div>'+
+    '<div class="row">'+
+      '<div class="field"><label>梁成(mm)</label><input type="number" class="ir-beam-size" value="'+(beamSize||300)+'" inputmode="decimal" oninput="calcIrisumi()"></div>'+
+    '</div>'+
+    '<div style="font-size:11px;color:var(--text3);margin-bottom:4px">形状と箇所数</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">'+
+      '<div style="text-align:center">'+
+        '<div style="font-size:11px;color:var(--text3);margin-bottom:2px">L字（2本/箇所）</div>'+
+        '<input type="number" class="ir-count-L" value="'+(shape==='L'?count||1:0)+'" min="0" inputmode="decimal" style="text-align:center;font-size:18px;font-weight:700;padding:8px" oninput="calcIrisumi()">'+
+      '</div>'+
+      '<div style="text-align:center">'+
+        '<div style="font-size:11px;color:var(--text3);margin-bottom:2px">T字（4本/箇所）</div>'+
+        '<input type="number" class="ir-count-T" value="'+(shape==='T'?count||1:0)+'" min="0" inputmode="decimal" style="text-align:center;font-size:18px;font-weight:700;padding:8px" oninput="calcIrisumi()">'+
+      '</div>'+
+      '<div style="text-align:center">'+
+        '<div style="font-size:11px;color:var(--text3);margin-bottom:2px">十字（8本/箇所）</div>'+
+        '<input type="number" class="ir-count-X" value="'+(shape==='X'?count||1:0)+'" min="0" inputmode="decimal" style="text-align:center;font-size:18px;font-weight:700;padding:8px" oninput="calcIrisumi()">'+
+      '</div>'+
+    '</div>';
+  container.appendChild(div);
+  calcIrisumi();
+}
+
+function removeBeamRow(){
+  var rows = document.querySelectorAll('.ir-beam-row');
+  if(rows.length > 1){
+    rows[rows.length-1].remove();
+    calcIrisumi();
+  }
+}
+
+function calcIrisumi(){
+  var kaikoh = parseFloat(document.getElementById('ir-kaikoh').value);
+  var rows = document.querySelectorAll('.ir-beam-row');
+  var el = document.getElementById('irisumi-result');
+
+  if(!kaikoh){ el.innerHTML=''; return; }
+
+  // 梁成ごとに集計
+  var beamMap = {}; // beamSize -> totalCount
+  rows.forEach(function(row){
+    var beamSize = parseFloat(row.querySelector('.ir-beam-size').value)||0;
+    if(!beamSize) return;
+    var cL = parseInt(row.querySelector('.ir-count-L').value)||0;
+    var cT = parseInt(row.querySelector('.ir-count-T').value)||0;
+    var cX = parseInt(row.querySelector('.ir-count-X').value)||0;
+    var total = cL*2 + cT*4 + cX*8;
+    if(total <= 0) return;
+    if(!beamMap[beamSize]) beamMap[beamSize] = {count:0, detail:[]};
+    beamMap[beamSize].count += total;
+    if(cL>0) beamMap[beamSize].detail.push('L字'+cL+'箇所×2='+cL*2+'本');
+    if(cT>0) beamMap[beamSize].detail.push('T字'+cT+'箇所×4='+cT*4+'本');
+    if(cX>0) beamMap[beamSize].detail.push('十字'+cX+'箇所×8='+cX*8+'本');
+  });
+
+  var keys = Object.keys(beamMap).map(Number).sort(function(a,b){return a-b;});
+
+  if(keys.length === 0){
+    el.innerHTML = '<div class="error-box" style="margin-top:10px">⚠️ 梁成と箇所数を入力してください</div>';
+    return;
+  }
+
+  // カット寸法計算: 階高 - 梁成 - 59
+  var html = '<div class="result-box" style="margin-top:14px">';
+  html += '<div class="result-title">✅ 入り隅 カットリスト　階高 '+kaikoh+'mm</div>';
+  html += '<div style="font-size:11px;color:var(--green);margin-bottom:12px">カット寸法 ＝ 階高 − 梁成 − 59</div>';
+  html += '<div class="irisumi-cut-list">';
+
+  keys.forEach(function(beam){
+    var cutLen = kaikoh - beam - 59;
+    var item = beamMap[beam];
+    if(cutLen <= 0){
+      html += '<div style="background:#fff0f0;border:1px solid #f0a0a0;border-radius:8px;padding:12px;margin-bottom:8px;color:var(--red)">梁成'+beam+'mm: 計算結果が0以下（'+cutLen+'mm）－ 階高を確認</div>';
+      return;
+    }
+    html += '<div class="cut-item">';
+    html += '<div><div class="cut-len">'+cutLen+'<span class="cut-len-unit"> mm</span></div>';
+    html += '<div style="font-size:11px;opacity:.7;margin-top:2px">梁成'+beam+'mm｜'+kaikoh+' − '+beam+' − 59</div>';
+    html += '<div style="font-size:11px;opacity:.7">'+item.detail.join(' ＋ ')+'</div></div>';
+    html += '<div style="text-align:right"><div class="cut-count">'+item.count+'</div><div class="cut-count-label">本</div></div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+
+  // 将来の材料拾い出し用データ（構造化）
+  html += '<div style="margin-top:12px;background:#f8f8f0;border:1px solid #c8c080;border-radius:6px;padding:10px;font-size:12px;color:var(--text3)">';
+  html += '<div style="font-weight:700;margin-bottom:4px">📋 加工リスト（合計）</div>';
+  keys.forEach(function(beam){
+    var cutLen = kaikoh - beam - 59;
+    if(cutLen <= 0) return;
+    html += '<div style="font-size:16px;font-weight:700;color:var(--text);margin:2px 0">'+cutLen+'mm：'+beamMap[beam].count+'本</div>';
+  });
+  html += '</div></div>';
+
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════
+// 天井下地計算（防火 -15mm 対応）
+// ※ この -15mm は天井専用。入り隅には干渉しない
+// ══════════════════════════════════════
+function calcTenjoShitaji(){
+  var mod = parseInt(document.getElementById('tj-module').value);
+  var hashira = parseInt(document.getElementById('tj-hashira').value);
+  var boka = document.getElementById('tenjo-boka-toggle').checked; // ★防火フラグ
+  var bokaDeduct = boka ? 15 : 0; // 天井専用の -15mm
+
+  var nokenBT = parseFloat(document.getElementById('tj-noken-board-thick').value)||0;
+  var nokenBC = parseInt(document.getElementById('tj-noken-board-count').value)||0;
+  var nokenBTotal = nokenBT*nokenBC;
+  var nokenBLabel = nokenBC===0?'ボード無し':nokenBT+'mm×'+nokenBC+'枚';
+  var jukeBT = parseFloat(document.getElementById('tj-juke-board-thick').value)||0;
+  var jukeBC = parseInt(document.getElementById('tj-juke-board-count').value)||0;
+  var jukeBTotal = jukeBT*jukeBC;
+  var jukeBLabel = jukeBC===0?'ボード無し':jukeBT+'mm×'+jukeBC+'枚';
+  var lenSel = document.getElementById('tj-length-sel').value;
+  var widSel = document.getElementById('tj-width-sel').value;
+  var length = lenSel==='custom'?parseFloat(document.getElementById('tj-length-custom').value):parseFloat(lenSel);
+  var width = widSel==='custom'?parseFloat(document.getElementById('tj-width-custom').value):parseFloat(widSel);
+  if(!length||!width){showError('tenjo-shitaji-result','部屋の寸法を選択または入力してください');return;}
+
+  var nokenPitch = parseFloat(document.getElementById('tj-noken-pitch').value);
+  var nokenjukePitch = parseFloat(document.getElementById('tj-nokenjuke-pitch').value);
+  var tsurugiPitch = parseFloat(document.getElementById('tj-tsurigi-pitch').value);
+  var nokenSizeVal = document.getElementById('tj-noken-size').value;
+  var nokenSize = nokenSizeVal==='custom'?(parseFloat(document.getElementById('tj-noken-cw').value)||0)+'×'+(parseFloat(document.getElementById('tj-noken-ch').value)||0)+'mm':'35×35mm';
+  var areaM2 = Math.round(length*width/1000000*100)/100;
+
+  // ★ 防火対応: 外壁接触側に -15mm を適用
+  var nokenjukeYuko = width - hashira - jukeBTotal - bokaDeduct;
+  var nokenYuko = length - hashira - nokenBTotal - 70 - bokaDeduct;
+
+  var nokenjukeCount = Math.floor(length/nokenjukePitch)+1;
+  var nokenjukeInnerCount = Math.max(0,nokenjukeCount-2);
+  var nokenjukeTotal = Math.round(nokenjukeCount*nokenjukeYuko/1000*10)/10;
+  var nokenTotalSteps = Math.floor(width/nokenPitch);
+  var moduleSteps = Math.round(mod/nokenPitch);
+  var nokenLastPos = Math.round(nokenjukeYuko);
+  var nokenPositions = [];
+  for(var i=0;i<=nokenTotalSteps;i++) nokenPositions.push(i<nokenTotalSteps?Math.round(i*nokenPitch):nokenLastPos);
+  var nokenW=0,nokenS=0;
+  nokenPositions.forEach(function(pos,idx){
+    var isEdge=idx===0||idx===nokenTotalSteps;
+    var isW=!isEdge&&(idx%moduleSteps===0);
+    if(isW) nokenW++; else nokenS++;
+  });
+  var nokenCount = nokenW+nokenS;
+  var nokenTotal = Math.round(nokenCount*nokenYuko/1000*10)/10;
+  var tsurugiPerRow = Math.max(0,Math.floor(nokenjukeYuko/tsurugiPitch));
+  var tsurugiCount = nokenjukeInnerCount*tsurugiPerRow;
+  var nokenPosList = nokenPositions.map(function(pos,idx){var isEdge=idx===0||idx===nokenTotalSteps;var isW=!isEdge&&(idx%moduleSteps===0);return pos+'('+(isW?'W':'S')+')';}).join(' · ');
+
+  var bokaNote = boka ? '　🔥 防火対応 −'+bokaDeduct+'mm 適用済み（外壁接触部）' : '';
+  showResult('tenjo-shitaji-result',[
+    {label:mod+'mod / 柱'+hashira+'mm'+(boka?' / 防火-15mm':''),value:'',unit:''},
+    {label:'部屋面積',value:areaM2,unit:'m²'},
+    {label:'野縁方向 有効長（長さ−柱−'+nokenBLabel+'−70'+(boka?'−15':'')+'）',value:nokenYuko,unit:'mm'},
+    {label:'野縁受け方向 最終野縁位置（幅−柱−'+jukeBLabel+(boka?'−15':'')+'）',value:nokenLastPos,unit:'mm'},
+    {label:'野縁サイズ / '+nokenSize,value:'',unit:''},
+    {label:'W野縁（モジュール芯）',value:nokenW,unit:'本'},
+    {label:'S野縁（外周端・中間）',value:nokenS,unit:'本'},
+    {label:'野縁 合計（W+S）',value:nokenCount,unit:'本'},
+    {label:'野縁 合計延べ長さ',value:nokenTotal,unit:'m'},
+    {label:'野縁受け '+nokenjukePitch+'mmピッチ（外周含む）',value:nokenjukeCount,unit:'本'},
+    {label:'野縁受け 内側本数',value:nokenjukeInnerCount,unit:'本'},
+    {label:'野縁受け 合計延べ長さ',value:nokenjukeTotal,unit:'m'},
+    {label:'吊木 '+tsurugiPitch+'mmピッチ / 合計',value:tsurugiCount,unit:'本'}
+  ].filter(function(i){return i.value!=='';}),
+  '野縁位置(mm)：'+nokenPosList+bokaNote);
+}
+
+// ══════════════════════════════════════
+// 電卓
+// ══════════════════════════════════════
+function buildCalc(uid,wrap){
+  var w=document.getElementById(wrap);
+  if(!w) return;
+  w.innerHTML=`
+  <div class="calc-wrap">
+    <div class="calc-ttl">🧮 電卓</div>
+    <div class="calc-disp-area">
+      <div class="calc-mem-disp" id="sm${uid}"></div>
+      <div class="calc-expr-line" id="se${uid}"></div>
+      <div class="calc-main-disp" id="sc${uid}">0</div>
+    </div>
+    <div class="calc-hist" id="hist-${uid}"></div>
+    <div class="cg6">
+      <button class="cb cb-mem" onclick="cb('${uid}','MC')">MC</button>
+      <button class="cb cb-mem" onclick="cb('${uid}','MR')">MR</button>
+      <button class="cb cb-mem" onclick="cb('${uid}','M+')">M+</button>
+      <button class="cb cb-mem" onclick="cb('${uid}','M\u2212')">M−</button>
+      <button class="cb cb-fn"  onclick="cb('${uid}','√')">√</button>
+      <button class="cb cb-ac"  onclick="cb('${uid}','AC')">AC</button>
+    </div>
+    <div class="cg3">
+      <button class="cb cb-fn" onclick="cb('${uid}','ATAN')" style="font-size:11px">ATAN→°</button>
+      <button class="cb cb-fn" onclick="cb('${uid}','MM2SHAKU')" style="font-size:10px">mm→尺</button>
+      <button class="cb cb-fn" onclick="cb('${uid}','SHAKU2MM')" style="font-size:10px">尺→mm</button>
+    </div>
+    <div class="cg4">
+      <button class="cb" onclick="cb('${uid}','7')">7</button>
+      <button class="cb" onclick="cb('${uid}','8')">8</button>
+      <button class="cb" onclick="cb('${uid}','9')">9</button>
+      <button class="cb cb-op" onclick="cb('${uid}','÷')">÷</button>
+      <button class="cb" onclick="cb('${uid}','4')">4</button>
+      <button class="cb" onclick="cb('${uid}','5')">5</button>
+      <button class="cb" onclick="cb('${uid}','6')">6</button>
+      <button class="cb cb-op" onclick="cb('${uid}','×')">×</button>
+      <button class="cb" onclick="cb('${uid}','1')">1</button>
+      <button class="cb" onclick="cb('${uid}','2')">2</button>
+      <button class="cb" onclick="cb('${uid}','3')">3</button>
+      <button class="cb cb-op" onclick="cb('${uid}','\u2212')">\u2212</button>
+      <button class="cb" onclick="cb('${uid}','0')">0</button>
+      <button class="cb" onclick="cb('${uid}','.')">.</button>
+      <button class="cb" onclick="cb('${uid}','⌫')">⌫</button>
+      <button class="cb cb-op" onclick="cb('${uid}','\uff0b')">\uff0b</button>
+    </div>
+    <button class="cb cb-eq" style="width:100%;padding:13px;font-size:18px;border-radius:6px" onclick="cb('${uid}','\uff1d')">\uff1d</button>
+  </div>`;
+}
+
+var _ch={};
+var _SC={disp:'0',prev:null,op:null,reset:false,lastOp:null,lastB:null,mem:0};
+var _CALC_UIDS=['sckobai','sckaidan','sckaiko','sctenjo','scfstop','scirisu','scbousui'];
+function _cst(u){return _SC;}
+function _cup(u){
+  var disp=_SC.disp,memStr=_SC.mem!==0?'M: '+_SC.mem:'';
+  _CALC_UIDS.forEach(function(uid){
+    var d=document.getElementById('sc'+uid),m=document.getElementById('sm'+uid);
+    if(d) d.textContent=disp;
+    if(m) m.textContent=memStr;
+  });
+}
+function _cfmt(n){if(!isFinite(n))return 'エラー';return String(parseFloat(n.toPrecision(10)));}
+function _ceval(a,b,op){
+  if(op==='＋'||op==='\uff0b') return a+b;
+  if(op==='−'||op==='\u2212') return a-b;
+  if(op==='×') return a*b;
+  if(op==='÷') return b===0?Infinity:a/b;
+  return b;
+}
+function _chist(u,expr){
+  if(!_ch['shared']) _ch['shared']=[];
+  _ch['shared'].push(expr);if(_ch['shared'].length>100)_ch['shared'].shift();
+  var arr=_ch['shared'];
+  var rows=arr.slice().reverse().map(function(e,i){
+    var ans=e.split(' = ').pop(),latest=i===0;
+    var bg=latest?'color:#c17f24;font-weight:bold;background:#fff8ee;':'color:#555';
+    return '<div onclick="_chistLoad(\''+ans+'\')" style="padding:4px;border-bottom:1px solid #e8e8e0;cursor:pointer;border-radius:3px;'+bg+'">'+(latest?'▶ ':'')+e+'<span style="float:right;color:#3a8a3a;font-size:10px">📲 '+ans+'</span></div>';
+  }).join('');
+  var inner='<div style="font-weight:bold;color:#5a7a5a;margin-bottom:4px;font-size:10px">📝 履歴('+arr.length+'/100) <button onclick="_chistClear()" style="font-size:9px;padding:1px 5px;cursor:pointer;border:1px solid #ccc;border-radius:3px;background:#fff;margin-left:6px">クリア</button></div>'+rows;
+  _CALC_UIDS.forEach(function(uid){
+    var el=document.getElementById('hist-'+uid);
+    if(!el) return;
+    el.style.display='block';
+    el.innerHTML=inner;
+  });
+}
+function _chistClear(){
+  _ch['shared']=[];
+  _CALC_UIDS.forEach(function(uid){
+    var el=document.getElementById('hist-'+uid);
+    if(el){el.style.display='none';el.innerHTML='';}
+  });
+}
+function _chistLoad(val){
+  var v=parseFloat(val);if(isNaN(v)) return;
+  _SC.disp=_cfmt(v);_SC.reset=true;_SC.lastOp=null;_SC.lastB=null;_cup('x');
+  _CALC_UIDS.forEach(function(uid){
+    var d=document.getElementById('sc'+uid);
+    if(d){d.style.color='#80e080';setTimeout(function(){d.style.color='#f0e060';},300);}
+  });
+}
+function cb(u,k){
+  var s=_cst(u),d=s.disp;
+  if(k==='MC'){_SC.mem=0;_cup(u);return;}
+  if(k==='MR'){s.disp=_cfmt(_SC.mem);s.reset=true;_cup(u);return;}
+  if(k==='M+'||k==='M＋'){_SC.mem=parseFloat(_cfmt(_SC.mem+parseFloat(d)));_cup(u);return;}
+  if(k==='M−'||k==='\u2212'){_SC.mem=parseFloat(_cfmt(_SC.mem-parseFloat(d)));_cup(u);return;}
+  if(k==='AC'){s.disp='0';s.prev=null;s.op=null;s.reset=false;_cup(u);return;}
+  if(k==='⌫'){
+    if(s.reset||s.disp==='エラー'){s.disp='0';s.reset=false;}
+    else if(s.disp.length<=1||(s.disp.length===2&&s.disp[0]==='-')){s.disp='0';}
+    else{s.disp=s.disp.slice(0,-1);}
+    _cup(u);return;
+  }
+  if(k==='√'){var v=parseFloat(d);s.disp=v<0?'エラー':_cfmt(Math.sqrt(v));s.reset=true;_cup(u);return;}
+  if(k==='ATAN'){var v=parseFloat(d),deg=Math.round(Math.atan(v)*180/Math.PI*10000)/10000;_chist(u,'atan('+d+') = '+deg+'°');s.disp=_cfmt(deg);s.reset=true;_cup(u);return;}
+  if(k==='MM2SHAKU'){
+    var v=parseFloat(d),shaku=Math.floor(v/303.0303),rem1=v-shaku*303.0303,sun=Math.floor(rem1/30.30303),rem2=rem1-sun*30.30303,bu=Math.round(rem2/3.030303*10)/10,dispStr=shaku+'尺'+sun+'寸'+bu+'分';
+    _chist(u,d+'mm = '+dispStr);s.disp=_cfmt(Math.round(v/303.0303*10000)/10000);s.reset=true;_cup(u);
+    _CALC_UIDS.forEach(function(uid){var el=document.getElementById('sc'+uid);if(el){el.textContent=dispStr;el.style.fontSize='18px';setTimeout(function(){el.style.fontSize='';_cup(uid);},4000);}});
+    return;
+  }
+  if(k==='SHAKU2MM'){var v=parseFloat(d),mm=Math.round(v*303.0303*100)/100;_chist(u,d+'尺 = '+mm+'mm');s.disp=_cfmt(mm);s.reset=true;_cup(u);return;}
+  if(k==='÷'||k==='×'||k==='−'||k==='\u2212'||k==='＋'||k==='\uff0b'){
+    if(s.op&&!s.reset){var r=_ceval(parseFloat(s.prev),parseFloat(d),s.op);s.disp=_cfmt(r);s.prev=_cfmt(r);}
+    else{s.prev=d;}
+    s.op=k;s.reset=true;_cup(u);return;
+  }
+  if(k==='＝'||k==='\uff1d'){
+    var expr='',res;
+    if(s.op&&s.prev!==null){s.lastOp=s.op;s.lastB=d;res=_ceval(parseFloat(s.prev),parseFloat(d),s.op);expr=s.prev+' '+s.op+' '+d+' = '+_cfmt(res);s.disp=_cfmt(res);s.prev=null;s.op=null;s.reset=true;}
+    else if(s.lastOp&&s.lastB!==null){res=_ceval(parseFloat(s.disp),parseFloat(s.lastB),s.lastOp);expr=s.disp+' '+s.lastOp+' '+s.lastB+' = '+_cfmt(res);s.disp=_cfmt(res);s.reset=true;}
+    if(expr) _chist(u,expr);
+    _cup(u);return;
+  }
+  if(k==='.'){if(s.reset){s.disp='0.';s.reset=false;_cup(u);return;}if(!s.disp.includes('.'))s.disp+='.';_cup(u);return;}
+  if(s.reset||s.disp==='エラー'){s.disp=k;s.reset=false;s.lastOp=null;s.lastB=null;}
+  else{s.disp=(s.disp==='0')?k:(s.disp.length<12?s.disp+k:s.disp);}
+  _cup(u);
+}
+
+// ══════════════════════════════════════
+// 共通ヘルパー
+// ══════════════════════════════════════
+function showResult(id,items,note){
+  note=note||'';
+  var html='<div class="result-box"><div class="result-title">計算結果</div>'+
+    items.map(function(i){return '<div class="result-item"><span class="result-label">'+i.label+'</span><span><span class="result-value">'+i.value+'</span><span class="result-unit">'+(i.unit||'')+'</span></span></div>';}).join('')+
+    (note?'<div class="result-note">'+note+'</div>':'')+
+    '</div>';
+  document.getElementById(id).innerHTML=html;
+}
+function showError(id,msg){document.getElementById(id).innerHTML='<div class="error-box">⚠️ '+msg+'</div>';}
+function fmt(n){if(isNaN(n))return '---';if(Number.isInteger(n))return n.toString();return Math.round(n*10)/10+'';}
+
+// ══════════════════════════════════════
+// 屋根計算ロジック（v5完全移植）
+// ══════════════════════════════════════
+function updateHafuSpans(){
+  var modSel=document.getElementById('hafu-module').value;
+  var mod=modSel==='custom'?null:parseInt(modSel);
+  ['hafu-jima-sel','hafu-hana-sel'].forEach(function(selId){
+    var sel=document.getElementById(selId);
+    var prev=parseFloat(sel.value);
+    if(!mod) return;
+    var opts='';
+    for(var n=1;n<=20;n++){var mm=mod*n;opts+='<option value="'+mm+'">'+mm+'mm（'+n+'sp）</option>';}
+    opts+='<option value="custom">カスタム入力</option>';
+    sel.innerHTML=opts;
+    var closest=Math.round(prev/mod)*mod,cStr=closest.toString();
+    if([...sel.options].some(function(o){return o.value===cStr;})) sel.value=cStr;
+  });
+}
+function updateHafuJima(){document.getElementById('hafu-jima-custom-wrap').style.display=document.getElementById('hafu-jima-sel').value==='custom'?'flex':'none';}
+function updateHafuHana(){document.getElementById('hafu-hana-custom-wrap').style.display=document.getElementById('hafu-hana-sel').value==='custom'?'flex':'none';}
+function autoCalcHafu(){
+  var kobai=parseFloat(document.getElementById('hafu-kobai').value);
+  if(!kobai) return;
+  try{calcHafu();}catch(e){}
+  ['arahafu','kehafu','arahana','kehana'].forEach(function(typ){try{calcHafuItem(typ);}catch(e){}});
+  try{calcArahafuWaritsuke();}catch(e){}
+  try{calcArahanaWaritsuke();}catch(e){}
+}
+function calcHafuItem(typ){
+  var kobai=parseFloat(document.getElementById('hafu-kobai').value);
+  var suihei=parseFloat(document.getElementById('hafu-suihei').value)||0;
+  var jimaSel=document.getElementById('hafu-jima-sel').value;
+  var jimaLen=jimaSel==='custom'?parseFloat(document.getElementById('hafu-jima-custom').value):parseFloat(jimaSel);
+  var hanaSel=document.getElementById('hafu-hana-sel').value;
+  var hanaLen=hanaSel==='custom'?parseFloat(document.getElementById('hafu-hana-custom').value):parseFloat(hanaSel);
+  var w=parseFloat(document.getElementById(typ+'-w').value)||0;
+  var t=parseFloat(document.getElementById(typ+'-t').value)||0;
+  var addPlus=parseFloat(document.getElementById(typ+'-add-plus').value)||0;
+  var addMinus=parseFloat(document.getElementById(typ+'-add-minus').value)||0;
+  var add=addPlus-addMinus;
+  var resultId=typ+'-result';
+  var isHafu=typ==='arahafu'||typ==='kehafu';
+  var label=typ==='arahafu'?'🪵 荒破風':typ==='kehafu'?'✨ 化粧破風':typ==='arahana'?'🪵 荒鼻隠し':'✨ 化粧鼻隠し';
+  var row=function(l,v,u){return '<div class="result-item"><span class="result-label">'+l+'</span><span><span class="result-value">'+v+'</span><span class="result-unit"> '+u+'</span></span></div>';};
+  if(isHafu){
+    if(!kobai){showError(resultId,'勾配を入力してください');return;}
+    var ratio=kobai/10,shamenR=Math.sqrt(1+ratio*ratio);
+    var jimaShamen=jimaLen?Math.round(jimaLen*shamenR*10)/10:null;
+    var nokiShamen=suihei?Math.round(suihei*shamenR*10)/10:null;
+    var baseLen=jimaShamen||0;
+    var addPlusShamen=Math.round(addPlus*shamenR*1000)/1000;
+    var addMinusShamen=Math.round(addMinus*shamenR*1000)/1000;
+    var addShamen=Math.round((addPlusShamen-addMinusShamen)*1000)/1000;
+    var totalLen=Math.round((baseLen+(nokiShamen||0)+addShamen)*10)/10;
+    var html='<div class="result-box" style="margin-top:8px"><div class="result-title">'+label+'（斜辺）</div>'+
+      (jimaShamen?row('地の間 斜辺',jimaShamen,'mm'):'<div class="result-item"><span class="result-label">地の間</span><span style="color:#888">未入力</span></div>')+
+      (nokiShamen?row('軒の出 斜辺 × 1',nokiShamen,'mm'):'')+
+      (addPlus>0?row('加算 '+addPlus+'mm × 斜辺比'+shamenR.toFixed(7),'+'+addPlusShamen.toFixed(3),'mm'):'')+
+      (addMinus>0?row('減算 '+addMinus+'mm × 斜辺比'+shamenR.toFixed(7),'-'+addMinusShamen.toFixed(3),'mm'):'')+
+      row('合計長さ',totalLen,'mm')+row('幅 × 厚み',w+' × '+t,'mm')+
+      '<div style="font-size:11px;color:var(--text3);margin-top:6px">斜辺比率（'+kobai+'寸）: '+shamenR.toFixed(7)+'</div></div>';
+    document.getElementById(resultId).innerHTML=html;
+    if(typ==='arahafu'&&totalLen>0){document.getElementById('arahafu-waritsuke-len').value=totalLen;calcArahafuWaritsuke();}
+    if(typ==='kehafu'&&totalLen>0){var wEl=document.getElementById('kehafu-waritsuke-len');if(wEl){wEl.value=totalLen;calcKehafuWaritsuke();}}
+  } else {
+    var baseLen2=hanaLen||0;
+    var totalLen2=Math.round((baseLen2+(suihei||0)+add)*10)/10;
+    var html2='<div class="result-box" style="margin-top:8px"><div class="result-title">'+label+'（水平）</div>'+
+      (hanaLen?row('梁間（水平）',hanaLen,'mm'):'<div class="result-item"><span class="result-label">梁間</span><span style="color:#888">未入力</span></div>')+
+      (suihei?row('軒の出 × 1',suihei,'mm'):'')+
+      (addPlus>0?row('カスタム加算（+）','+'+addPlus,'mm'):'')+
+      (addMinus>0?row('カスタム減算（−）','-'+addMinus,'mm'):'')+
+      row('合計長さ',totalLen2,'mm')+row('幅 × 厚み',w+' × '+t,'mm')+'</div>';
+    document.getElementById(resultId).innerHTML=html2;
+    if(typ==='arahana'&&totalLen2>0){
+      document.getElementById('arahana-waritsuke-len').value=totalLen2;calcArahanaWaritsuke();
+      var kehanaWEl=document.getElementById('kehana-waritsuke-len');if(kehanaWEl){kehanaWEl.value=totalLen2;calcKehanaWaritsuke();}
+    }
+  }
+}
+function calcHafu(){
+  var kobai=parseFloat(document.getElementById('hafu-kobai').value);
+  var suihei=parseFloat(document.getElementById('hafu-suihei').value)||0;
+  var jimaSel=document.getElementById('hafu-jima-sel').value,jimaLen=jimaSel==='custom'?parseFloat(document.getElementById('hafu-jima-custom').value):parseFloat(jimaSel);
+  var hanaSel=document.getElementById('hafu-hana-sel').value,hanaLen=hanaSel==='custom'?parseFloat(document.getElementById('hafu-hana-custom').value):parseFloat(hanaSel);
+  var araW=parseFloat(document.getElementById('arahafu-w').value)||105,araT=parseFloat(document.getElementById('arahafu-t').value)||27;
+  var keW=parseFloat(document.getElementById('kehafu-w').value)||150,keT=parseFloat(document.getElementById('kehafu-t').value)||14;
+  var araHW=parseFloat(document.getElementById('arahana-w').value)||105,araHT=parseFloat(document.getElementById('arahana-t').value)||27;
+  var keHW=parseFloat(document.getElementById('kehana-w').value)||150,keHT=parseFloat(document.getElementById('kehana-t').value)||14;
+  var araAddP=parseFloat(document.getElementById('arahafu-add-plus').value)||0,araAddM=parseFloat(document.getElementById('arahafu-add-minus').value)||0;
+  var keAddP=parseFloat(document.getElementById('kehafu-add-plus').value)||0,keAddM=parseFloat(document.getElementById('kehafu-add-minus').value)||0;
+  var araHAddP=parseFloat(document.getElementById('arahana-add-plus').value)||0,araHAddM=parseFloat(document.getElementById('arahana-add-minus').value)||0;
+  var keHAddP=parseFloat(document.getElementById('kehana-add-plus').value)||0,keHAddM=parseFloat(document.getElementById('kehana-add-minus').value)||0;
+  if(!kobai){showError('hafu-result','勾配を入力してください');return;}
+  var ratio=kobai/10,angleRad=Math.atan(ratio),angleDeg=Math.round(angleRad*180/Math.PI*100)/100;
+  var shamenRatio=Math.sqrt(1+ratio*ratio);
+  var toShamen=function(mm){return Math.round(mm*shamenRatio*1000)/1000;};
+  var araAddShamen=Math.round((toShamen(araAddP)-toShamen(araAddM))*1000)/1000;
+  var keAddShamen=Math.round((toShamen(keAddP)-toShamen(keAddM))*1000)/1000;
+  var araHAdd=araHAddP-araHAddM,keHAdd=keHAddP-keHAddM;
+  var noki_shamen=suihei?Math.round(suihei*shamenRatio*10)/10:null;
+  var noki_yajiri=suihei?Math.round(suihei*ratio*10)/10:null;
+  var jimaShamen=jimaLen?Math.round(jimaLen*shamenRatio*10)/10:null;
+  var hafuBase=(jimaShamen&&noki_shamen)?Math.round((jimaShamen+noki_shamen)*10)/10:jimaShamen;
+  var araHafuTotal=hafuBase!=null?Math.round((hafuBase+araAddShamen)*10)/10:null;
+  var keHafuTotal=hafuBase!=null?Math.round((hafuBase+keAddShamen)*10)/10:null;
+  var hanaBase=(hanaLen&&suihei)?hanaLen+suihei:hanaLen;
+  var araHanaTotal=hanaBase!=null?Math.round((hanaBase+araHAdd)*10)/10:null;
+  var keHanaTotal=hanaBase!=null?Math.round((hanaBase+keHAdd)*10)/10:null;
+  var topCut=angleDeg,botCut=Math.round((90-angleDeg)*100)/100;
+  var divider='<div style="border-bottom:1px solid #c0d0c0;margin:10px 0 12px"></div>';
+  var stitle=function(t,c){return '<div style="font-size:13px;font-weight:700;letter-spacing:2px;color:'+c+';margin-bottom:8px">'+t+'</div>';};
+  var row=function(l,v,u){return '<div class="result-item"><span class="result-label">'+l+'</span><span><span class="result-value">'+v+'</span><span class="result-unit"> '+u+'</span></span></div>';};
+  var rowNA=function(l){return '<div class="result-item"><span class="result-label">'+l+'</span><span style="color:#888">未入力</span></div>';};
+  var h='<div class="result-box" style="margin-top:14px"><div class="result-title">✅ 破風 / 鼻隠し 計算結果</div>';
+  h+=stitle('▌ 共通','#4a9060');
+  h+=row('勾配',kobai,'寸')+row('勾配角度',angleDeg,'度')+row('丸鋸 上端カット',topCut,'度')+row('丸鋸 下端カット',botCut,'度');
+  h+=suihei?row('軒の出（水平）',suihei,'mm')+row('軒の出（斜辺）',noki_shamen,'mm')+row('軒の出（垂直）',noki_yajiri,'mm'):rowNA('軒の出');
+  h+=divider+stitle('🪵 荒破風（'+araW+'×'+araT+'mm）','var(--accent)');
+  h+=(jimaShamen?row('地の間 斜辺',jimaShamen,'mm'):rowNA('地の間 未入力'))+(noki_shamen?row('軒の出 斜辺',noki_shamen,'mm'):'');
+  h+=araHafuTotal!=null?row('合計長さ',araHafuTotal,'mm'):'';
+  h+=divider+stitle('✨ 化粧破風（'+keW+'×'+keT+'mm）','#80b0e0');
+  h+=(jimaShamen?row('地の間 斜辺',jimaShamen,'mm'):rowNA('地の間 未入力'))+(noki_shamen?row('軒の出 斜辺',noki_shamen,'mm'):'');
+  h+=keHafuTotal!=null?row('合計長さ',keHafuTotal,'mm'):'';
+  h+=divider+stitle('🪵 荒鼻隠し（'+araHW+'×'+araHT+'mm）','var(--accent)');
+  h+=hanaLen?row('長さ（水平）',hanaLen,'mm'):rowNA('梁間 未入力');
+  h+=araHanaTotal!=null?row('合計長さ',araHanaTotal,'mm'):'';
+  h+=divider+stitle('✨ 化粧鼻隠し（'+keHW+'×'+keHT+'mm）','#a0c8f0');
+  h+=hanaLen?row('長さ（水平）',hanaLen,'mm'):rowNA('梁間 未入力');
+  h+=keHanaTotal!=null?row('合計長さ',keHanaTotal,'mm'):'';
+  h+='</div>';
+  document.getElementById('hafu-result').innerHTML=h;
+}
+function calcKehafuWaritsuke(){
+  var el=document.getElementById('kehafu-waritsuke-result'),lenEl=document.getElementById('kehafu-waritsuke-len');
+  if(!el||!lenEl) return;
+  var totalLen=parseFloat(lenEl.value);
+  if(!totalLen||totalLen<=0){el.innerHTML='';return;}
+  renderKeshokuWaritsuke(el,totalLen,7,'hafu');
+}
+function calcKehanaWaritsuke(){
+  var el=document.getElementById('kehana-waritsuke-result'),lenEl=document.getElementById('kehana-waritsuke-len');
+  if(!el||!lenEl) return;
+  var araLen=parseFloat(lenEl.value);
+  if(!araLen||araLen<=0){el.innerHTML='';return;}
+  var JOZEN=3030,GAP=7,totalCount=Math.ceil(araLen/JOZEN),gapCount=totalCount+1,totalGap=gapCount*GAP;
+  var yukoLen=Math.round((araLen-totalGap)*10)/10;
+  var fullCount=Math.floor(yukoLen/JOZEN),remainder=Math.round((yukoLen-fullCount*JOZEN)*10)/10;
+  var bd='';if(fullCount>0)bd+=JOZEN+'mm × '+fullCount+'枚';if(remainder>0)bd+=(bd?' ＋ ':'')+remainder+'mm × 1枚';
+  var row=function(l,v,u){return '<div class="result-item" style="font-size:13px"><span class="result-label">'+l+'</span><span><span class="result-value">'+v+'</span><span class="result-unit"> '+u+'</span></span></div>';};
+  el.innerHTML='<div class="result-box" style="margin-top:8px;padding:10px">'+row('荒鼻隠し全長',araLen,'mm')+row('定尺',JOZEN,'mm')+row('枚数',totalCount,'枚')+
+    '<div style="background:#d0e8ff;border-radius:3px;padding:6px 8px;margin-top:6px;font-size:13px;font-weight:bold;color:#1a3a6a">📋 '+bd+'</div></div>';
+}
+function renderKeshokuWaritsuke(el,totalLen,gap,type){
+  var JOZEN=3030,fullCount=Math.floor(totalLen/JOZEN),remainder=Math.round((totalLen-fullCount*JOZEN)*10)/10;
+  var totalCount=remainder>0?fullCount+1:fullCount;
+  var gapCount=type==='hafu'?(totalCount-1):(totalCount+1),totalGap=gapCount*gap;
+  var fp=fullCount,lp=remainder>0?Math.round((remainder-totalGap)*10)/10:Math.round((JOZEN-totalGap)*10)/10;
+  if(remainder===0&&fullCount>0)fp=fullCount-1;
+  var bd='';if(fp>0)bd+=JOZEN+'mm × '+fp+'枚';if(lp>0)bd+=(bd?' ＋ ':'')+lp+'mm × 1枚';
+  var row=function(l,v,u){return '<div class="result-item" style="font-size:13px"><span class="result-label">'+l+'</span><span><span class="result-value">'+v+'</span><span class="result-unit"> '+u+'</span></span></div>';};
+  el.innerHTML='<div class="result-box" style="margin-top:8px;padding:10px">'+row('全長',totalLen,'mm')+row('必要枚数',totalCount,'枚')+
+    '<div style="background:#d0e8ff;border-radius:3px;padding:6px 8px;margin-top:6px;font-size:13px;font-weight:bold;color:#1a3a6a">📋 '+bd+'</div></div>';
+}
+function calcArahafuWaritsuke(){
+  var totalLen=parseFloat(document.getElementById('arahafu-waritsuke-len').value),el=document.getElementById('arahafu-waritsuke-result');
+  if(!totalLen||totalLen<=0){el.innerHTML='';return;}
+  renderAraWaritsuke(el,totalLen);
+}
+function calcArahanaWaritsuke(){
+  var totalLen=parseFloat(document.getElementById('arahana-waritsuke-len').value),el=document.getElementById('arahana-waritsuke-result');
+  if(!totalLen||totalLen<=0){el.innerHTML='';return;}
+  renderAraWaritsuke(el,totalLen);
+}
+function renderAraWaritsuke(el,totalLen){
+  var JOZEN=3600,fullCount=Math.floor(totalLen/JOZEN),remainder=Math.round((totalLen-fullCount*JOZEN)*10)/10;
+  var totalCount=remainder>0?fullCount+1:fullCount;
+  var row=function(l,v,u){return '<div class="result-item" style="font-size:13px"><span class="result-label">'+l+'</span><span><span class="result-value">'+v+'</span><span class="result-unit"> '+u+'</span></span></div>';};
+  var bd='';if(fullCount>0)bd+=JOZEN+'mm × '+fullCount+'枚';if(remainder>0)bd+=(bd?' ＋ ':'')+remainder+'mm × 1枚';
+  el.innerHTML='<div class="result-box" style="margin-top:8px;padding:10px">'+row('全長',totalLen,'mm')+row('必要枚数',totalCount,'枚')+
+    '<div style="background:#d8f0d8;border-radius:3px;padding:6px 8px;margin-top:6px;font-size:13px;font-weight:bold;color:#1a4a1a">📋 '+bd+'</div></div>';
+}
+function calcSumigi(){
+  var kobai=parseFloat(document.getElementById('sum-kobai').value),suihei=parseFloat(document.getElementById('sum-suihei').value)||0;
+  if(!kobai){showError('sumigi-result','勾配を入力してください');return;}
+  var ratio=kobai/10,angleRad=Math.atan(ratio),angleDeg=Math.round(angleRad*180/Math.PI*100)/100;
+  var topCut=angleDeg,botCut=Math.round((90-angleDeg)*100)/100;
+  var shamenRatio=Math.sqrt(1+ratio*ratio),nobiR=Math.round(shamenRatio*10000)/10000;
+  var sumiKobaiR=kobai/Math.sqrt(2),sumiNobiR=Math.sqrt(2+ratio*ratio);
+  var sumiAngleDeg=Math.round(Math.atan(sumiKobaiR/10)*180/Math.PI*100)/100;
+  var items=[
+    {label:'勾配',value:kobai,unit:'寸'},{label:'傾斜角度',value:angleDeg,unit:'度'},
+    {label:'平伸び率',value:nobiR,unit:''},{label:'上端カット',value:topCut,unit:'度'},{label:'下端カット',value:botCut,unit:'度'}
+  ];
+  if(suihei){items.push({label:'水平長さ',value:suihei,unit:'mm'});items.push({label:'斜辺実長',value:Math.round(suihei*shamenRatio*10)/10,unit:'mm'});}
+  items.push({label:'── 隅木 ──',value:'',unit:''});
+  items.push({label:'隅木勾配（さしがね）',value:Math.round(sumiKobaiR*10000)/10000,unit:'寸'});
+  items.push({label:'隅木傾斜角度',value:sumiAngleDeg,unit:'度'});
+  items.push({label:'隅伸び率',value:Math.round(sumiNobiR*10000)/10000,unit:''});
+  items.push({label:'隅木 上端カット',value:sumiAngleDeg,unit:'度'});
+  items.push({label:'隅木 下端カット',value:Math.round((90-sumiAngleDeg)*100)/100,unit:'度'});
+  if(suihei) items.push({label:'隅木実長（軒出部）',value:Math.round(suihei*sumiNobiR*10)/10,unit:'mm'});
+  showResult('sumigi-result',items.filter(function(i){return i.value!==''}),'');
+}
+function calcTaruki(){
+  try{
+    var noki_sel=document.getElementById('tk-noki-sel').value,isCustomNoki=noki_sel==='custom';
+    document.getElementById('tk-noki-custom-row').style.display=isCustomNoki?'':'none';
+    var noki=isCustomNoki?(parseFloat(document.getElementById('tk-noki-custom').value)||0):parseFloat(noki_sel);
+    var pitchSel=document.getElementById('tk-pitch-keta').value,isCustomPitch=pitchSel==='custom';
+    document.getElementById('tk-keta-custom-wrap').style.display=isCustomPitch?'':'none';
+    var pitch=isCustomPitch?(parseFloat(document.getElementById('tk-pitch-keta-custom').value)||0):parseFloat(pitchSel);
+    var hariSpanSel=document.getElementById('tk-span-hari').value,isCustomHari=hariSpanSel==='custom';
+    document.getElementById('tk-hari-span-custom-wrap').style.display=isCustomHari?'':'none';
+    var spanHari=isCustomHari?(parseFloat(document.getElementById('tk-span-hari-custom').value)||0):parseFloat(hariSpanSel);
+    var kobai=parseFloat(document.getElementById('tk-kobai').value),el=document.getElementById('taruki-result');
+    if(!kobai||!noki||!spanHari){el.innerHTML='';return;}
+    var sR=kobai/10,hiraNobiR=Math.sqrt(1+sR*sR),noki_real=Math.round(noki*hiraNobiR*10)/10,hari_real=Math.round(spanHari*hiraNobiR*10)/10;
+    var sumiNobiR=Math.sqrt(2+sR*sR),sumiLen=Math.round(noki*sumiNobiR*10)/10,sumiKobaiR=kobai/Math.sqrt(2);
+    var hPitch=pitch?Math.round(pitch*sR*10)/10:null;
+    var html='<div class="result-box" style="margin-top:10px"><div class="result-title">勾配 '+kobai+'寸 / 軒の出 '+noki+'mm</div>';
+    function row(l,v,n){return '<div class="result-item"><span class="result-label">'+l+'</span><span><span class="result-value">'+v+'</span></span></div>'+(n?'<div style="font-size:11px;color:var(--text3);margin:-4px 0 5px 8px">'+n+'</div>':'');}
+    html+=row('平伸び率',hiraNobiR.toFixed(4),'実長 = 水平長さ × 平伸び率');
+    html+=row('軒の出 実長',noki_real+' mm',noki+'mm × '+hiraNobiR.toFixed(4));
+    html+=row('梁方向スパン 実長',hari_real+' mm',spanHari+'mm × '+hiraNobiR.toFixed(4));
+    if(hPitch) html+=row('1ピッチ('+pitch+'mm)の高さ差',hPitch+' mm','');
+    html+='<div style="border-top:1px dashed #b0c0b0;margin:8px 0"></div>';
+    html+=row('隅勾配（さしがね）',sumiKobaiR.toFixed(3)+' 寸','平勾配 '+kobai+' ÷ √2');
+    html+=row('隅伸び率',sumiNobiR.toFixed(4),'√(2 + 勾配比²)');
+    html+=row('隅木実長（軒出部）',sumiLen+' mm','軒の出 '+noki+'mm × 隅伸び率');
+    html+='</div>';el.innerHTML=html;
+  }catch(e){}
+}
+
+// ══════════════════════════════════════
+// 階段計算ロジック（v5完全移植）
+// ══════════════════════════════════════
+function getMawariBase(mod,board,sokupan){
+  if(sokupan===1){if(mod===910)return board===15?1643:board===12.5?1648:1660;else return board===15?1623:board===12.5?1628:1638;}
+  else{if(mod===910)return board===15?1670:board===12.5?1675:1685;else return board===15?1650:board===12.5?1655:1665;}
+}
+function getMawariDans(t){return{mawari2:2,mawari3:3,mawari6:6,mawari9:9}[t]||0;}
+function getMawariLabel(t){return{mawari2:'二段廻り',mawari3:'三段廻り',mawari6:'六段廻り',mawari9:'九段廻り'}[t]||'直段';}
+function kbTypeChange(sel){
+  var block=sel.closest('.kaidan-block'),isStraight=sel.value==='straight';
+  block.querySelectorAll('.kb-straight-wrap').forEach(function(el){el.style.display=isStraight?'':'none';});
+  updateKaidanLayout();
+}
+function addKaidanBlock(){
+  var container=document.getElementById('kaidan-blocks'),div=document.createElement('div');
+  div.className='kaidan-block';div.style.cssText='background:#fff;border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px';
+  div.innerHTML='<div class="row"><div class="field"><label>種別</label><select class="kb-type" onchange="kbTypeChange(this)"><option value="straight" selected>直段</option><option value="mawari3">三段廻り</option><option value="mawari2">二段廻り</option><option value="mawari6">六段廻り</option><option value="mawari9">九段廻り</option></select></div><div class="field kb-straight-wrap"><label>踏面(mm)</label><input type="number" class="kb-fummen" placeholder="例: 225" inputmode="decimal" oninput="updateKaidanLayout()"></div></div><div class="row kb-straight-wrap"><div class="field"><label>段数</label><input type="number" class="kb-steps" placeholder="例: 6" min="1" max="30" inputmode="decimal" oninput="updateKaidanLayout()"></div><div class="field"><label>水平距離（自動）</label><input type="text" class="kb-horiz-disp" readonly style="opacity:.7;background:var(--bg3);font-weight:700;color:var(--accent)"></div></div><div class="kb-mawari-info" style="font-size:11px;color:var(--blue);margin-top:4px"></div>';
+  container.appendChild(div);updateKaidanLayout();
+}
+function removeKaidanBlock(){
+  var c=document.getElementById('kaidan-blocks'),blocks=c.querySelectorAll('.kaidan-block');
+  if(blocks.length>1){c.removeChild(blocks[blocks.length-1]);updateKaidanLayout();}
+}
+function updateKaidanLayout(){
+  try{
+    var mod=parseInt(document.getElementById('k-module').value),board=parseFloat(document.getElementById('k-board').value),sokupan=parseInt(document.getElementById('k-sokupan').value);
+    var kFummen=parseFloat(document.getElementById('k-fummen').value)||0,mawariBase=getMawariBase(mod,board,sokupan);
+    var sokupanLabel=sokupan?'あり':'なし',danbanLen=mod-105-board*2-25;
+    var blocks=document.querySelectorAll('#kaidan-blocks .kaidan-block');
+    var parts=[],totalSteps=0,totalHoriz=0;
+    blocks.forEach(function(block){
+      var type=block.querySelector('.kb-type').value,isStraight=type==='straight';
+      block.querySelectorAll('.kb-straight-wrap').forEach(function(el){el.style.display=isStraight?'':'none';});
+      if(isStraight){
+        var fummen=parseFloat(block.querySelector('.kb-fummen')&&block.querySelector('.kb-fummen').value)||kFummen||0;
+        var steps=parseInt(block.querySelector('.kb-steps')&&block.querySelector('.kb-steps').value)||0;
+        var horiz=fummen>0&&steps>0?fummen*steps:0;
+        var dispEl=block.querySelector('.kb-horiz-disp');if(dispEl)dispEl.value=horiz>0?horiz+'mm':'−';
+        block.querySelector('.kb-mawari-info').textContent='';
+        parts.push('直段 '+fummen+'mm×'+steps+'段('+horiz+'mm)');totalSteps+=steps;totalHoriz+=horiz;
+      }else{
+        var dans=getMawariDans(type),label=getMawariLabel(type);
+        block.querySelector('.kb-mawari-info').innerHTML='廻り側板<strong>'+sokupanLabel+'</strong> 基準: <strong style="color:var(--accent)">'+mawariBase+'mm</strong>';
+        parts.push(label+'(基準'+mawariBase+'mm)');totalSteps+=dans;totalHoriz+=mawariBase;
+      }
+    });
+    document.getElementById('kaidan-layout-preview').innerHTML='<strong>構成：</strong>'+parts.join(' → ')+'<br><strong>合計段数：</strong>'+totalSteps+'段　<strong>概算水平：</strong>'+totalHoriz+'mm<br><strong>直段板切断：</strong>'+danbanLen+'mm';
+  }catch(e){}
+}
+function calcKaidan(){
+  var floor=parseFloat(document.getElementById('k-floor').value);
+  var stepsInput=parseFloat(document.getElementById('k-steps-input').value)||0;
+  var kFummen=parseFloat(document.getElementById('k-fummen').value)||0;
+  var mod=parseInt(document.getElementById('k-module').value),board=parseFloat(document.getElementById('k-board').value),sokupan=parseInt(document.getElementById('k-sokupan').value);
+  if(!floor){showError('kaidan-result','階高を入力してください');return;}
+  var bestSteps=0,bestKeage=0;
+  if(stepsInput>0){bestSteps=stepsInput;bestKeage=floor/stepsInput;}
+  else{for(var s=10;s<=20;s++){var k=floor/s;if(k<=230&&k>=150&&(!bestSteps||Math.abs(k-200)<Math.abs(bestKeage-200))){bestSteps=s;bestKeage=k;}}}
+  if(!bestSteps){showError('kaidan-result','適切な段数が見つかりません');return;}
+  var keage=Math.round(bestKeage*100)/100,mawariBase=getMawariBase(mod,board,sokupan),sokupanLabel=sokupan?'あり':'なし';
+  var danbanLen=mod-105-board*2-25;
+  var blocks=document.querySelectorAll('#kaidan-blocks .kaidan-block'),layoutParts=[],totalHoriz=0,details=[];
+  blocks.forEach(function(block){
+    var type=block.querySelector('.kb-type').value;
+    if(type==='straight'){
+      var fummen=parseFloat(block.querySelector('.kb-fummen')&&block.querySelector('.kb-fummen').value)||kFummen||0;
+      var steps=parseInt(block.querySelector('.kb-steps')&&block.querySelector('.kb-steps').value)||0;
+      var horiz=fummen*steps;layoutParts.push('直段'+steps+'段');totalHoriz+=horiz;
+      if(fummen&&steps) details.push({label:'直段 '+fummen+'mm×'+steps+'段',value:horiz,unit:'mm'});
+    }else{
+      var label=getMawariLabel(type),dans=getMawariDans(type);
+      layoutParts.push(label);totalHoriz+=mawariBase;
+      details.push({label:label+'（廻り側板'+sokupanLabel+'）基準',value:mawariBase,unit:'mm'});
+    }
+  });
+  var idealFummen=kFummen||Math.round(450-keage),angle=Math.atan(keage/idealFummen)*180/Math.PI;
+  var komfort=keage+idealFummen,ok=keage<=230&&idealFummen>=150,komfortOk=komfort>=420&&komfort<=450;
+  var items=[
+    {label:mod+'mod / ボード'+board+'mm / 廻り側板'+sokupanLabel,value:bestSteps,unit:'段'},
+    {label:'蹴上げ（階高÷段数）',value:keage,unit:'mm/段'},
+    {label:'踏面',value:idealFummen,unit:'mm'},
+    {label:'蹴上げ＋踏面',value:komfort,unit:'mm'},
+    {label:'傾斜角度',value:fmt(Math.round(angle*100)/100),unit:'度'}
+  ].concat(details).concat([
+    {label:'直段板・蹴込み板 切断長さ',value:danbanLen,unit:'mm'},
+    {label:'階段全体 概算水平距離',value:totalHoriz,unit:'mm'}
+  ]);
+  showResult('kaidan-result',items,'構成：'+layoutParts.join(' → ')+'\n'+(ok?'✅ 建基法クリア':'⚠️ 蹴上げ・踏面確認')+' / '+(komfortOk?'✅ 快適範囲':'⚠️ 快適範囲外('+komfort+'mm)'));
+}
+function updateMawariLabel(){
+  try{
+    var dans=parseInt(document.getElementById('mw-dans').value),k1=parseFloat(document.getElementById('mw-keage1').value);
+    var ti=document.getElementById('mw-height'),tl=document.getElementById('mw-height-label');
+    tl.textContent=dans+'段分の合計高さ（自動計算）(mm)';
+    if(k1&&dans) ti.value=Math.round(k1*dans*100)/100;else ti.value='';
+    document.getElementById('mawari-result').innerHTML='';
+  }catch(e){}
+}
+function syncMawariKeage(){
+  try{
+    var dans=parseInt(document.getElementById('mw-dans').value),k1=parseFloat(document.getElementById('mw-keage1').value);
+    var ti=document.getElementById('mw-height');
+    if(k1&&dans) ti.value=Math.round(k1*dans*100)/100;else ti.value='';
+  }catch(e){}
+}
+function calcMawari(){
+  var hInput=parseFloat(document.getElementById('mw-height').value);
+  var mod=parseFloat(document.getElementById('mw-module').value),board=parseFloat(document.getElementById('mw-board').value);
+  var dans=parseInt(document.getElementById('mw-dans').value);
+  if(!hInput){showError('mawari-result','1段の高さを入力してください');return;}
+  var baseHoriz=mod===900?(board===15?1623:1628):(board===15?1643:1648);
+  var keagePerDan=Math.round(hInput/dans*100)/100,angleRad=Math.atan(hInput/baseHoriz),angleDeg=Math.round(angleRad*180/Math.PI*100)/100;
+  var kobai=Math.round(hInput/baseHoriz*10*1000)/1000,shamen=Math.round(Math.sqrt(hInput*hInput+baseHoriz*baseHoriz)*10)/10;
+  var topCut=angleDeg,botCut=Math.round((90-angleDeg)*100)/100;
+  showResult('mawari-result',[
+    {label:dans+'段廻り / '+mod+'mod / '+board+'mmボード',value:baseHoriz,unit:'mm'},
+    {label:dans+'段分の高さ',value:hInput,unit:'mm'},
+    {label:'1段あたりの蹴上げ',value:keagePerDan,unit:'mm'},
+    {label:'側板の勾配',value:kobai,unit:'寸勾配'},
+    {label:'側板の傾斜角度',value:angleDeg,unit:'度'},
+    {label:'側板の実長（斜辺）',value:shamen,unit:'mm'},
+    {label:'上端水平墨（丸鋸角度）',value:topCut,unit:'度'},
+    {label:'下端垂直墨（丸鋸角度）',value:botCut,unit:'度'}
+  ],'📐 丸鋸セット：上端 '+topCut+'°／下端 '+botCut+'°');
+}
+function calcSokupan(){
+  var keage=parseFloat(document.getElementById('sp-keage').value),fummen=parseFloat(document.getElementById('sp-fummen').value);
+  var steps=parseFloat(document.getElementById('sp-steps').value)||0,thick=parseFloat(document.getElementById('sp-thickness').value)||0;
+  if(!keage||!fummen){showError('sokupan-result','蹴上げと踏面を入力してください');return;}
+  var angleRad=Math.atan(keage/fummen),angleDeg=Math.round(angleRad*180/Math.PI*100)/100;
+  var pitch=Math.round(Math.sqrt(keage*keage+fummen*fummen)*10)/10,kobai=Math.round(keage/fummen*10*100)/100;
+  var topCut=angleDeg,botCut=Math.round((90-angleDeg)*100)/100;
+  var items=[
+    {label:'側板の勾配',value:kobai,unit:'寸勾配'},{label:'側板の傾斜角度',value:angleDeg,unit:'度'},
+    {label:'1段あたりのピッチ',value:pitch,unit:'mm'},{label:'上端水平墨（丸鋸角度）',value:topCut,unit:'度'},{label:'下端垂直墨（丸鋸角度）',value:botCut,unit:'度'}
+  ];
+  if(steps>0){var tw=fummen*steps,th=keage*steps,sl=Math.round(Math.sqrt(tw*tw+th*th)*10)/10;items.push({label:'側板の水平長さ（'+steps+'段）',value:fmt(tw),unit:'mm'});items.push({label:'側板の垂直高さ（'+steps+'段）',value:fmt(th),unit:'mm'});items.push({label:'側板の実長',value:fmt(sl),unit:'mm'});}
+  if(thick){items.push({label:'踏み板受け欠き込み深さ',value:fmt(Math.round(thick*Math.sin(angleRad)*10)/10),unit:'mm'});items.push({label:'踏み板受け欠き込み幅',value:fmt(Math.round(thick*Math.cos(angleRad)*10)/10),unit:'mm'});}
+  var komfort=keage+fummen,komfortNote=komfort>=420&&komfort<=450?'✅ 快適範囲(420〜450mm)':'⚠️ 快適範囲外（'+komfort+'mm）';
+  showResult('sokupan-result',items,'📐 丸鋸セット：上端 '+topCut+'°／下端 '+botCut+'°\n'+komfortNote);
+}
+function calcDanban(){
+  var mod=parseInt(document.getElementById('db-module').value),board=parseFloat(document.getElementById('db-board').value);
+  var jiku13=52.5,jiku2=60.6,kiri13,kiri2;
+  if(mod===900){kiri13=board===15?822.0:824.5;kiri2=board===15?949.0:951.0;}
+  else{kiri13=board===15?832.0:834.5;kiri2=board===15?960.0:963.5;}
+  var r=function(l,v){return '<div class="result-item"><span class="result-label">'+l+'</span><span><span class="result-value">'+v+'</span><span class="result-unit"> mm</span></span></div>';};
+  document.getElementById('danban-result').innerHTML=
+    '<div class="result-box" style="margin-top:14px"><div class="result-title">✅ '+mod+'モジュール / '+board+'mmボード 段板墨付け寸法</div>'+
+    '<div style="font-size:11px;color:#1a5830;margin-bottom:12px">※蹴込みしゃくり前ツラ先端からの寸法</div>'+
+    r('1・3段目 軸柱ツラ墨',jiku13)+r('1・3段目 切り墨',kiri13)+
+    '<div style="border-top:1px solid #c0d0c0;margin:8px 0"></div>'+
+    r('2段目 軸柱ツラ墨',jiku2)+r('2段目 切り墨',kiri2)+'</div>';
+}
+function calcDanbanCut(){
+  var mod=parseInt(document.getElementById('dn-module').value),hashira=parseInt(document.getElementById('dn-hashira').value);
+  var board=parseFloat(document.getElementById('dn-board').value),fixed=parseFloat(document.getElementById('dn-fixed').value)||25;
+  var boardTotal=board*2,cutLen=mod-hashira-boardTotal-fixed;
+  showResult('danban-cut-result',[
+    {label:'モジュール',value:mod,unit:'mm'},{label:'柱幅',value:hashira,unit:'mm'},
+    {label:'ボード厚 × 2',value:boardTotal,unit:'mm'},{label:'固定差引',value:fixed,unit:'mm'},
+    {label:'直段板・直蹴込み板 切断長さ',value:cutLen,unit:'mm'}
+  ],'💡 '+mod+' − '+hashira+' − '+boardTotal+' − '+fixed+' = '+cutLen+'mm');
+}
+
+// ══════════════════════════════════════
+// 開口計算ロジック（v5完全移植）
+// ══════════════════════════════════════
+function calcDoor(){
+  var mod=parseInt(document.getElementById('kaiko-module').value);
+  var board=parseFloat(document.getElementById('kaiko-board').value)||0;
+  var hashira=parseInt(document.getElementById('kaiko-hashira').value);
+  var doorWSel=document.getElementById('door-w').value;
+  var doorW=doorWSel==='custom'?parseFloat(document.getElementById('door-cw').value):parseFloat(doorWSel);
+  var doorBoardSel=document.getElementById('door-board').value;
+  var doorBoard=doorBoardSel==='custom'?parseFloat(document.getElementById('door-board-cw').value):parseFloat(doorBoardSel)||0;
+  var doorBoardSide=document.getElementById('door-board-side').value;
+  var doorBoardTotal=doorBoardSide==='two'?doorBoard*2:doorBoard;
+  var clearW=parseFloat(document.getElementById('door-clear-w').value)||0;
+  var roughW=parseFloat(document.getElementById('door-rough-w').value)||0;
+  var tategitSel=document.getElementById('door-tategit').value;
+  var tategit=tategitSel==='custom'?parseFloat(document.getElementById('door-tategit-cw').value):parseFloat(tategitSel)||0;
+  var tategitSide=document.getElementById('door-tategit-side').value;
+  var tategitTotal=tategitSide==='two'?tategit*2:tategit;
+  if(!doorW){showError('door-result','ドア幅を選択または入力してください');return;}
+  var yukoW=mod-hashira-board*2;
+  var aroW=doorW+doorBoardTotal+clearW*2+tategitTotal+roughW;
+  showResult('door-result',[
+    {label:'モジュール有効幅（mod−柱−ボード×2）',value:yukoW,unit:'mm'},
+    {label:'ドアサイズ幅',value:doorW,unit:'mm'},
+    {label:'ドア開口枠内寸法',value:aroW,unit:'mm'}
+  ],'💡 ドア'+doorW+' + ボード'+doorBoardTotal+' + CL両側'+clearW*2+' + 縦木'+tategitTotal+' + 荒開口'+roughW+' = '+aroW+'mm');
+}
+function renderDoorMatrix(){
+  var el = document.getElementById('door-matrix');
+  if (!el) return;
+  var hashira = parseInt(document.getElementById('kaiko-hashira').value) || 105;
+  var clearW  = parseFloat(document.getElementById('door-clear-w').value) || 0;
+  var doorSizes  = [648, 734, 754, 1188, 1324, 1454, 1644];
+  var modules    = [910, 900];
+  var boardCases = [
+    ['無し',   0,    0],
+    ['12.5片', 12.5, 1],
+    ['12.5両', 12.5, 2],
+    ['15片',   15,   1],
+    ['15両',   15,   2],
+  ];
+
+  function thStyle(){ return 'background:#2a5a90;color:#fff;padding:5px 4px;border:1px solid #1a3a60;white-space:nowrap;font-weight:700;font-size:10px;text-align:center'; }
+  function tdStyle(isHdr, ok){
+    var bg  = isHdr ? '#e8f0f8' : (ok === false ? '#ffe8e8' : '#fff');
+    var col = isHdr ? '#1a3060' : (ok === false ? '#c0392b' : '#333');
+    var fw  = isHdr ? 'bold' : 'normal';
+    return 'padding:4px 5px;border:1px solid #dde3ec;text-align:right;background:'+bg+';font-weight:'+fw+';color:'+col+';white-space:nowrap;font-size:11px';
+  }
+
+  // ── 残り幅÷2 表 ──
+  var html = '<div style="font-size:11px;font-weight:700;color:#2a5a90;margin-bottom:4px">📋 残り幅÷2（片側）mm　柱幅'+hashira+'mm</div>';
+  html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;min-width:100%"><thead><tr>';
+  html += '<th style="'+thStyle()+'">ドア幅</th>';
+  modules.forEach(function(mod){
+    boardCases.forEach(function(bc){ html += '<th style="'+thStyle()+'">'+mod+'<br>'+bc[0]+'</th>'; });
+  });
+  html += '</tr></thead><tbody>';
+  doorSizes.forEach(function(dw, ri){
+    html += '<tr><td style="'+tdStyle(true)+'">'+dw+'</td>';
+    modules.forEach(function(mod){
+      boardCases.forEach(function(bc){
+        var openW   = dw + clearW * 2;
+        var spans   = Math.ceil(openW / mod);
+        var shinsin = mod * spans;
+        var nokori  = shinsin - openW - hashira - bc[1] * bc[2];
+        var half    = Math.round(nokori / 2 * 10) / 10;
+        var ok      = nokori >= 0;
+        html += '<td style="'+tdStyle(false, ok)+'">'+half+'</td>';
+      });
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // ── 残り幅（÷2なし）表 ──
+  html += '<div style="font-size:11px;font-weight:700;color:#2a5a90;margin:12px 0 4px">📋 残り幅（合計）mm</div>';
+  html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;min-width:100%"><thead><tr>';
+  html += '<th style="'+thStyle()+'">ドア幅</th>';
+  modules.forEach(function(mod){
+    boardCases.forEach(function(bc){ html += '<th style="'+thStyle()+'">'+mod+'<br>'+bc[0]+'</th>'; });
+  });
+  html += '</tr></thead><tbody>';
+  doorSizes.forEach(function(dw){
+    html += '<tr><td style="'+tdStyle(true)+'">'+dw+'</td>';
+    modules.forEach(function(mod){
+      boardCases.forEach(function(bc){
+        var openW   = dw + clearW * 2;
+        var spans   = Math.ceil(openW / mod);
+        var shinsin = mod * spans;
+        var nokori  = shinsin - openW - hashira - bc[1] * bc[2];
+        var ok      = nokori >= 0;
+        html += '<td style="'+tdStyle(false, ok)+'">'+nokori+'</td>';
+      });
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="font-size:10px;color:#8090a8;margin-top:4px">CL片側'+clearW+'mm / 柱幅'+hashira+'mm / 赤＝マイナス（要確認）</div>';
+  el.innerHTML = html;
+}
+
+function renderSashMatrix(){
+  var el = document.getElementById('sash-matrix');
+  if (!el) return;
+  var hashira = parseInt(document.getElementById('kaiko-hashira').value) || 105;
+  var clearW  = parseFloat(document.getElementById('sash-clear-w') ? document.getElementById('sash-clear-w').value : 0) || 0;
+  var sashSizes = [300, 405, 640, 730, 780, 924, 1185, 1235, 1640, 1690];
+  var modules   = [910, 900];
+
+  function thStyle(){ return 'background:#2a5a90;color:#fff;padding:5px 4px;border:1px solid #1a3a60;white-space:nowrap;font-weight:700;font-size:10px;text-align:center'; }
+  function tdStyle(isHdr, ok){
+    var bg  = isHdr ? '#e8f0f8' : (ok === false ? '#ffe8e8' : '#fff');
+    var col = isHdr ? '#1a3060' : (ok === false ? '#c0392b' : '#333');
+    var fw  = isHdr ? 'bold' : 'normal';
+    return 'padding:4px 5px;border:1px solid #dde3ec;text-align:right;background:'+bg+';font-weight:'+fw+';color:'+col+';white-space:nowrap;font-size:11px';
+  }
+
+  // ── 残り幅÷2 表 ──
+  var html = '<div style="font-size:11px;font-weight:700;color:#2a5a90;margin-bottom:4px">📋 残り幅÷2（片側）mm　半外付け・ボード無し　柱幅'+hashira+'mm</div>';
+  html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;min-width:100%"><thead><tr>';
+  html += '<th style="'+thStyle()+'">サッシ幅</th>';
+  modules.forEach(function(mod){ html += '<th style="'+thStyle()+'">'+mod+'<br>半外<br>無し</th>'; });
+  html += '</tr></thead><tbody>';
+  sashSizes.forEach(function(sw){
+    html += '<tr><td style="'+tdStyle(true)+'">'+sw+'</td>';
+    modules.forEach(function(mod){
+      var openW   = sw + clearW * 2;
+      var spans   = Math.ceil(openW / mod);
+      var shinsin = mod * spans;
+      var nokori  = shinsin - openW - hashira;
+      var half    = Math.round(nokori / 2 * 10) / 10;
+      var ok      = nokori >= 0;
+      html += '<td style="'+tdStyle(false, ok)+'">'+half+'</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+
+  // ── 残り幅（÷2なし）表 ──
+  html += '<div style="font-size:11px;font-weight:700;color:#2a5a90;margin:12px 0 4px">📋 残り幅（合計）mm</div>';
+  html += '<div style="overflow-x:auto"><table style="border-collapse:collapse;min-width:100%"><thead><tr>';
+  html += '<th style="'+thStyle()+'">サッシ幅</th>';
+  modules.forEach(function(mod){ html += '<th style="'+thStyle()+'">'+mod+'<br>半外<br>無し</th>'; });
+  html += '</tr></thead><tbody>';
+  sashSizes.forEach(function(sw){
+    html += '<tr><td style="'+tdStyle(true)+'">'+sw+'</td>';
+    modules.forEach(function(mod){
+      var openW   = sw + clearW * 2;
+      var spans   = Math.ceil(openW / mod);
+      var shinsin = mod * spans;
+      var nokori  = shinsin - openW - hashira;
+      var ok      = nokori >= 0;
+      html += '<td style="'+tdStyle(false, ok)+'">'+nokori+'</td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  html += '<div style="font-size:10px;color:#8090a8;margin-top:4px">CL片側'+clearW+'mm / 柱幅'+hashira+'mm / 赤＝マイナス（要確認）</div>';
+  el.innerHTML = html;
+}
+function calcSash(){
+  var sashWSel=document.getElementById('sash-w').value;
+  var sashW=sashWSel==='custom'?parseFloat(document.getElementById('sash-cw').value):parseFloat(sashWSel);
+  var method=parseFloat(document.getElementById('sash-method').value)||0;
+  var clearW=parseFloat(document.getElementById('sash-clear-w').value)||0;
+  var roughW=parseFloat(document.getElementById('sash-rough-w').value)||0;
+  var tategitSel=document.getElementById('sash-tategit').value;
+  var tategit=tategitSel==='custom'?parseFloat(document.getElementById('sash-tategit-cw').value):parseFloat(tategitSel)||0;
+  var tategitSide=document.getElementById('sash-tategit-side').value;
+  var tategitTotal=tategitSide==='two'?tategit*2:tategit;
+  if(!sashW){showError('sash-result','サッシ幅を選択または入力してください');return;}
+  var aroW=sashW+clearW*2+method+tategitTotal+roughW;
+  showResult('sash-result',[
+    {label:'サッシ幅',value:sashW,unit:'mm'},
+    {label:'工法調整',value:method>=0?'+'+method:method,unit:'mm'},
+    {label:'サッシ開口枠内寸法',value:aroW,unit:'mm'}
+  ],'💡 サッシ'+sashW+' + CL'+clearW*2+' + 工法'+method+' + 縦木'+tategitTotal+' = '+aroW+'mm');
+}
+
+// ══════════════════════════════════════
+// FS計算ロジック（v5完全移植）
+// ══════════════════════════════════════
+function calcFireStop(){
+  var kaikoh=parseFloat(document.getElementById('fs-kaikoh').value);
+  var tenjoh=parseFloat(document.getElementById('fs-tenjoh').value);
+  var board=parseFloat(document.getElementById('fs-board').value);
+  var clear=parseFloat(document.getElementById('fs-clear').value)||0;
+  var beamSel=document.getElementById('fs-beam').value;
+  var beam=beamSel==='custom'?(parseFloat(document.getElementById('fs-beam-cw').value)||150):parseFloat(beamSel);
+  if(!kaikoh||!tenjoh){showError('fstop-result','階高と天井高を入力してください');return;}
+  var baseDeduct=tenjoh+36+board+clear+120;
+  var boardLen=Math.round((kaikoh-(baseDeduct+(beam-150)))*10)/10;
+  var space=kaikoh-tenjoh;
+  if(boardLen<=0){showError('fstop-result','⚠️ 計算結果が0以下です（'+boardLen+'mm）');return;}
+  var beamList=[];for(var b=150;b<=600;b+=30)beamList.push(b);
+  var allRows=beamList.map(function(b){return{beamW:b,boardL:Math.round((kaikoh-(baseDeduct+(b-150)))*10)/10};});
+  var tbl='<div style="overflow-x:auto;margin-top:10px"><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:var(--bg3)"><th style="padding:7px 10px;text-align:center;color:var(--accent);border:1px solid var(--border)">梁幅(mm)</th><th style="padding:7px 10px;text-align:center;color:var(--accent);border:1px solid var(--border)">必要長さ(mm)</th></tr>';
+  allRows.forEach(function(row,i){
+    var isCurrent=row.beamW===beam,bg=isCurrent?'rgba(210,150,0,0.18)':(i%2===0?'#fff':'#faf8f4');
+    var col=row.boardL<=0?'#505050':'var(--accent2)',bdr=isCurrent?'1px solid var(--accent)':'1px solid #e0e0d8';
+    tbl+='<tr style="background:'+bg+'"><td style="padding:6px 10px;text-align:center;border:'+bdr+';font-size:15px;font-weight:700">'+row.beamW+(isCurrent?' ◀':'')+' </td><td style="padding:6px 10px;text-align:center;border:'+bdr+';font-size:15px;font-weight:700;color:'+col+'">'+(row.boardL>0?row.boardL:'−')+'</td></tr>';
+  });
+  tbl+='</table></div>';
+  document.getElementById('fstop-result').innerHTML=
+    '<div class="result-box" style="margin-top:14px"><div class="result-title">✅ ファイヤーストップ計算結果</div>'+
+    '<div class="result-item"><span class="result-label">階高</span><span><span class="result-value">'+kaikoh+'</span><span class="result-unit"> mm</span></span></div>'+
+    '<div class="result-item"><span class="result-label">天井高</span><span><span class="result-value">'+tenjoh+'</span><span class="result-unit"> mm</span></span></div>'+
+    '<div class="result-item"><span class="result-label">天井裏高さ</span><span><span class="result-value">'+space+'</span><span class="result-unit"> mm</span></span></div>'+
+    '<div class="result-item" style="border-bottom:none"><span class="result-label" style="color:var(--accent);font-weight:700">選択梁（'+beam+'mm）必要長さ</span><span><span class="result-value" style="font-size:28px;color:var(--accent)">'+boardLen+'</span><span class="result-unit"> mm</span></span></div>'+
+    '<div style="margin-top:14px;background:#f4fbf0;border:1px solid #a8c8a0;border-radius:4px;padding:12px"><div style="font-size:11px;color:#2a6a40;font-weight:700;margin-bottom:8px">📋 梁幅150〜600mm 全サイズ一覧</div>'+tbl+'</div></div>';
+}
+function calcWoodFireStop(){
+  var mod=parseInt(document.getElementById('wfs-module').value);
+  var boardSel=document.getElementById('wfs-board').value;
+  var board=boardSel==='custom'?(parseFloat(document.getElementById('wfs-board-cw').value)||0):parseFloat(boardSel)||0;
+  var minusRaw=parseFloat(document.getElementById('wfs-minus').value)||0;
+  var minus=-Math.abs(minusRaw),half=mod/2;
+  var base1=Math.round((half-67.5-board+minus)*100)/100;
+  var base2=Math.round((half-75.0-board+minus)*100)/100;
+  var base3=Math.round((half-37.5-board+minus)*100)/100;
+  var steps=[0,2,4,6,8,10];
+  function mkTable(title,base,sub,color){
+    var html='<div style="margin-bottom:12px"><div style="font-size:13px;font-weight:700;color:'+color+';margin-bottom:4px">'+title+'</div><div style="font-size:11px;color:var(--text3);margin-bottom:6px">'+sub+'</div><table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:var(--bg3)"><th style="padding:6px 10px;text-align:center;color:var(--accent);border:1px solid var(--border)">加算</th><th style="padding:6px 10px;text-align:center;color:var(--accent);border:1px solid var(--border)">寸法(mm)</th></tr>';
+    steps.forEach(function(s,i){
+      var val=Math.round((base+s)*100)/100,isBase=s===0;
+      var bg=isBase?'rgba(210,150,0,0.18)':(i%2===0?'#fff':'#faf8f4'),col=isBase?'var(--accent)':'var(--text2)';
+      html+='<tr style="background:'+bg+'"><td style="padding:6px 10px;text-align:center;border:1px solid var(--border);font-size:12px;color:var(--text2)">基準'+(s>0?'+'+s:'')+'</td><td style="padding:6px 10px;text-align:center;border:1px solid var(--border);font-size:18px;font-weight:700;color:'+col+'">'+val+'</td></tr>';
+    });
+    return html+'</table></div>';
+  }
+  document.getElementById('wfs-result').innerHTML=
+    '<div class="result-box" style="margin-top:14px"><div class="result-title">✅ 木FS 寸法一覧（スパン÷2 = '+half+'mm）</div>'+
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">'+
+    mkTable('A：÷2 − 67.5',base1,half+' − 67.5 − '+board+(minusRaw>0?' − '+minusRaw:'')+' = '+base1,'var(--accent2)')+
+    mkTable('B：÷2 − 75.0',base2,half+' − 75.0 − '+board+(minusRaw>0?' − '+minusRaw:'')+' = '+base2,'#80b0e0')+
+    '</div>'+mkTable('C：÷2 − 37.5',base3,half+' − 37.5 − '+board+(minusRaw>0?' − '+minusRaw:'')+' = '+base3,'#80d0a0')+'</div>';
+}
+
+// ══════════════════════════════════════
+// 天井モジュール関連（v5完全移植）
+// ══════════════════════════════════════
+function updateTenjoModule(){
+  try{
+    var mod=parseInt(document.getElementById('tj-module').value);
+    document.getElementById('tj-nokenjuke-pitch').value=mod;
+    document.getElementById('tj-tsurigi-pitch').value=mod;
+    function buildOptions(selId,defSpans){
+      var sel=document.getElementById(selId),prevVal=sel.value,opts='';
+      for(var n=1;n<=20;n++){var mm=mod*n;opts+='<option value="'+mm+'"'+(n===defSpans?' selected':'')+'>'+mm+'mm（'+n+'スパン）</option>';}
+      opts+='<option value="custom">カスタム入力</option>';
+      sel.innerHTML=opts;
+      var prevNum=parseFloat(prevVal);
+      if(prevNum&&prevVal!=='custom'){var closest=Math.round(prevNum/mod)*mod;if([...sel.options].some(function(o){return o.value===String(closest);}))sel.value=String(closest);}
+    }
+    buildOptions('tj-length-sel',4);buildOptions('tj-width-sel',3);
+    document.getElementById('tj-length-custom-wrap').style.display='none';
+    document.getElementById('tj-width-custom-wrap').style.display='none';
+  }catch(e){}
+}
+function updateTenjoLength(){document.getElementById('tj-length-custom-wrap').style.display=document.getElementById('tj-length-sel').value==='custom'?'flex':'none';}
+function updateTenjoWidth(){document.getElementById('tj-width-custom-wrap').style.display=document.getElementById('tj-width-sel').value==='custom'?'flex':'none';}
+function updateNokenSize(){document.getElementById('tj-noken-custom-wrap').style.display=document.getElementById('tj-noken-size').value==='custom'?'flex':'none';}
+
+// ══════════════════════════════════════
+// 防水計算ロジック（v5完全移植）
+// ══════════════════════════════════════
+function updateBousuiPitchOptions(){
+  try{
+    var mod=parseInt(document.getElementById('bw-module').value);
+    ['bw-tate-pitch-sel','bw-yoko-pitch-sel'].forEach(function(id){
+      var sel=document.getElementById(id),prev=sel.value,opts='';
+      for(var n=1;n<=4;n++){var mm=mod*n;opts+='<option value="'+mm+'">'+mm+'mm（'+n+'スパン）</option>';}
+      opts+='<option value="custom">カスタム入力</option>';
+      sel.innerHTML=opts;
+      if(prev!=='custom'){var closest=Math.round(parseFloat(prev)/mod)*mod;if([...sel.options].some(function(o){return o.value===String(closest);}))sel.value=String(closest);}
+    });
+  }catch(e){}
+}
+function updateTateKozoAdd(){
+  var yokoKozoAdd=parseFloat(document.getElementById('bw-yoko-kozo-add').value)||0;
+  var tateKozo=Math.max(0,yokoKozoAdd-24);
+  document.getElementById('bw-tate-kozo-add').value=tateKozo;
+}
+function calcBousui(){
+  var mod=parseInt(document.getElementById('bw-module').value);
+  var tateSel=document.getElementById('bw-tate-pitch-sel').value;
+  var tatePitch=tateSel==='custom'?(parseFloat(document.getElementById('bw-tate-cw').value)||0):parseFloat(tateSel);
+  if(!tatePitch){showError('bousui-result','縦方向ピッチを入力してください');return;}
+  var yokoSel=document.getElementById('bw-yoko-pitch-sel').value;
+  var yokoPitch=yokoSel==='custom'?(parseFloat(document.getElementById('bw-yoko-cw').value)||0):parseFloat(yokoSel);
+  if(!yokoPitch){showError('bousui-result','横方向ピッチを入力してください');return;}
+  var kobaiSel=document.getElementById('bw-kobai-sel').value;
+  var kobai=kobaiSel==='custom'?(parseFloat(document.getElementById('bw-kobai-cw').value)||0):parseFloat(kobaiSel);
+  if(!kobai){showError('bousui-result','勾配を入力してください');return;}
+  var tateMinus=parseFloat(document.getElementById('bw-tate-minus').value)||0;
+  var yokoMinus=parseFloat(document.getElementById('bw-yoko-minus').value)||0;
+  var mizoWidth=parseFloat(document.getElementById('bw-mizo-width').value)||120;
+  var yokoKozoAdd=parseFloat(document.getElementById('bw-yoko-kozo-add').value)||24;
+  var tateAutoMinus=105+24;
+  var tateDist=tatePitch-tateAutoMinus-tateMinus-mizoWidth;
+  var tateKozoAddCalc=Math.max(0,(yokoKozoAdd||0)-24);
+  if(document.getElementById('bw-tate-kozo-add')) document.getElementById('bw-tate-kozo-add').value=tateKozoAddCalc;
+  var tateRise=Math.round(tateDist*kobai*100)/100;
+  var tateLow=Math.round((tateKozoAddCalc+tateRise)*100)/100;
+  var yokoAutoMinus=105+24;
+  var yokoYuka=yokoPitch-yokoAutoMinus-yokoMinus;
+  var yokoMizoLen=yokoYuka-100;
+  var yokoHigh=yokoKozoAdd;
+  showResult('bousui-result',[
+    {label:'縦ピッチ',value:tatePitch,unit:'mm'},{label:'縦 有効距離（溝除く）',value:tateDist,unit:'mm'},
+    {label:'勾配分上昇（'+kobai+'）',value:tateRise,unit:'mm'},{label:'縦 最高点高さ',value:tateLow,unit:'mm'},
+    {label:'横ピッチ',value:yokoPitch,unit:'mm'},{label:'横 床有効長さ',value:yokoYuka,unit:'mm'},
+    {label:'横 溝長さ（床有効−100）',value:yokoMizoLen,unit:'mm'},{label:'溝反対側高さ',value:yokoHigh,unit:'mm'}
+  ],'💡 縦有効'+tateDist+' × 勾配'+kobai+' = 上昇'+tateRise+'mm');
+}
+
+// ══════════════════════════════════════
+// 初期化
+// ══════════════════════════════════════
+document.addEventListener('DOMContentLoaded',function(){
+  try{updateTenjoModule();}catch(e){}
+  try{renderDoorMatrix();}catch(e){}
+  try{renderSashMatrix();}catch(e){}
+  try{updateBousuiPitchOptions();}catch(e){}
+  // 入り隅 - デフォルト3行追加
+  addBeamRow(300, 'L', 2);
+  addBeamRow(300, 'T', 1);
+  // 電卓を各タブに挿入
+  buildCalc('sckobai','calc-kobai-wrap');
+  buildCalc('sckaidan','calc-kaidan-wrap');
+  buildCalc('sckaiko','calc-kaiko-wrap');
+  buildCalc('sctenjo','calc-tenjo-wrap');
+  buildCalc('scfstop','calc-fstop-wrap');
+  buildCalc('scirisu','calc-irisumi-wrap');
+  buildCalc('scbousui','calc-bousui-wrap');
+  // 防火地域ボード初期化（準防火をデフォルト選択）
+  setFireZone('準防火');
+});
+</script>
+</body>
+</html>
