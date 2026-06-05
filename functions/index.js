@@ -13,7 +13,7 @@ exports.askClaude = onRequest(
     try {
       const { prompt, model, mediaContents, messages } = req.body;
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY.value());
-      const modelName = model || "gemini-2.0-flash";
+      const modelName = model || "gemini-2.0-flash"-001;
       const geminiModel = genAI.getGenerativeModel({ model: modelName });
 
       let result;
